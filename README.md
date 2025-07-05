@@ -1,8 +1,8 @@
-# Blue Core Graph Explorer
+# Blue Core Graph Toolbox
 Web Application for loading and manipulating [Blue Core](https://bcld.info) RDF. 
 
 Web application published with Github pages and is available at 
-[https://blue-core-lod.github.io/graph-explorer](https://blue-core-lod.github.io/graph-explorer). 
+[https://blue-core-lod.github.io/graph-toolbox](https://blue-core-lod.github.io/graph-toolbox). 
 
 Through [Pyscript](https://pyscript.net/), the [rdflib](https://rdflib.readthedocs.io/en/stable/) Python package is used 
 for loading RDF through Blue Core.
