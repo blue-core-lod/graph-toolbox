@@ -9,6 +9,7 @@
   ],
   "files": {
     "./src/helpers.py": "./helpers.py",
+    "./src/bluecore_api.py": "./bluecore_api.py",
     "./src/load_rdf.py": "./load_rdf.py",
     "./src/query_rdf.py": "./query_rdf.py",
     "./src/sinopia_api.py": "./sinopia_api.py",
