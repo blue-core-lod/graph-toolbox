@@ -17,7 +17,7 @@ FILE = pathlib.Path(".")
 BIBFRAME = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
 SINOPIA = rdflib.Namespace("http://sinopia.io/vocabulary/")
 
-from helpers import bluecore_login
+from bluecore_api import bluecore_login
 from sinopia_api import show_groups
 from load_rdf import bibframe_sparql as bf_sparql_widget, build_graph, download_graph
 from query_rdf import download_query_results, run_query

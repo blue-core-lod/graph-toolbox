@@ -1,12 +1,6 @@
-import js
 import markdown
 
-from js import document, console
-
-
-async def bluecore_login(event):
-    console.log(f"Starting Blue Core Login")
-   
+from js import document
     
 
 def set_versions(version):
