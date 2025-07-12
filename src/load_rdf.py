@@ -7,7 +7,7 @@ from jinja2 import Template
 from pyodide.ffi import create_proxy
 from pyodide.http import pyfetch
 
-from state import NAMESPACES, SINOPIA_GRAPH
+from state import NAMESPACES, BF_GRAPH
 from sinopia_api import environments
 
 
@@ -33,13 +33,13 @@ async def _get_all_graph(api_url: str, limit: int = 250) -> None:
                 continue
             try:
                 turtle_rdf = skolemize_resource(row["uri"], row["data"])
-                SINOPIA_GRAPH.parse(data=turtle_rdf, format="turtle")
+                BF_GRAPH.parse(data=turtle_rdf, format="turtle")
             except Exception as e:
                 js.console.log(f"Failed to parse {row['uri']} {e}")
         next_url = payload["links"].get("next")
         if next_url is None:
             loading_resources = False
-    return SINOPIA_GRAPH
+    return BF_GRAPH
 
 
 async def _get_group_graph(group: str, api_url: str, limit: int = 2_500) -> None:
@@ -58,15 +58,15 @@ async def _get_group_graph(group: str, api_url: str, limit: int = 2_500) -> None
             continue
         try:
             turtle_rdf = skolemize_resource(row["uri"], row["data"])
-            SINOPIA_GRAPH.parse(data=turtle_rdf, format="turtle")
+            BF_GRAPH.parse(data=turtle_rdf, format="turtle")
         except Exception as e:
             js.console.log(f"Cannot load {row['uri']} Error:\n{e}")
             continue
-    return SINOPIA_GRAPH
+    return BF_GRAPH
 
 
 async def build_graph(*args) -> rdflib.Graph:
-    global SINOPIA_GRAPH
+    global BF_GRAPH
 
     groups_selected = js.document.getElementById("env-groups")
     individual_resources = js.document.getElementById("resource-urls")
@@ -81,9 +81,9 @@ async def build_graph(*args) -> rdflib.Graph:
             sinopia_api_url = environments.get(elem.value)
     for option in groups_selected.selectedOptions:
         if option.value == "all":
-            SINOPIA_GRAPH = await _get_all_graph(sinopia_api_url)
+            BF_GRAPH = await _get_all_graph(sinopia_api_url)
             break
-        SINOPIA_GRAPH = await _get_group_graph(option.value, sinopia_api_url)
+        BF_GRAPH = await _get_group_graph(option.value, sinopia_api_url)
 
     if len(individual_resources.value) > 0:
         resources = individual_resources.value.split(",")
@@ -93,10 +93,10 @@ async def build_graph(*args) -> rdflib.Graph:
             turtle_rdf = skolemize_resource(
                 resource_url.strip(), resource_payload["data"]
             )
-            SINOPIA_GRAPH.parse(data=turtle_rdf, format="turtle")
+            BF_GRAPH.parse(data=turtle_rdf, format="turtle")
     loading_spinner.classList.add("d-none")
-    _summarize_graph(SINOPIA_GRAPH)
-    return SINOPIA_GRAPH
+    _summarize_graph(BF_GRAPH)
+    return BF_GRAPH
 
 
 bf_summary_template = Template(
@@ -151,28 +151,28 @@ async def download_graph(event):
     anchor = event.target
     serialization = anchor.getAttribute("data-serialization")
 
-    if len(SINOPIA_GRAPH) < 1:
+    if len(BF_GRAPH) < 1:
         js.alert("Empty graph cannot be download")
         return
     for prefix, uri in NAMESPACES:
-        SINOPIA_GRAPH.namespace_manager.bind(prefix, uri)
+        BF_GRAPH.namespace_manager.bind(prefix, uri)
     mime_type, contents = None, None
     match serialization:
         case "json-ld":
             mime_type = "application/json"
-            contents = SINOPIA_GRAPH.serialize(format="json-ld")
+            contents = BF_GRAPH.serialize(format="json-ld")
 
         case "nt":
             mime_type = "application/n-triples"
-            contents = SINOPIA_GRAPH.serialize(format="nt")
+            contents = BF_GRAPH.serialize(format="nt")
 
         case "ttl":
             mime_type = "application/x-turtle"
-            contents = SINOPIA_GRAPH.serialize(format="turtle")
+            contents = BF_GRAPH.serialize(format="turtle")
 
         case "xml":
             mime_type = "application/rdf+xml"
-            contents = SINOPIA_GRAPH.serialize(format="pretty-xml")
+            contents = BF_GRAPH.serialize(format="pretty-xml")
 
         case _:
             js.alert(f"Unknown RDF serialization {serialization}")

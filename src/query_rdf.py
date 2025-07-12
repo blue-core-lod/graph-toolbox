@@ -5,7 +5,7 @@ import js
 import pandas as pd
 
 import helpers
-from state import RESULTS_DF, SINOPIA_GRAPH
+from state import RESULTS_DF, BF_GRAPH
 
 
 from jinja2 import Template
@@ -77,14 +77,14 @@ async def download_query_results(event):
 
 async def run_query(*args):
     global RESULTS_DF
-    global SINOPIA_GRAPH
+    global BF_GRAPH
 
     query_element = js.document.getElementById("bf-sparql-queries")
     sparql_query = query_element.value
     output_element = js.document.getElementById("bf-sparql-results")
     output_element.content = ""
     try:
-        query = SINOPIA_GRAPH.query(sparql_query)
+        query = BF_GRAPH.query(sparql_query)
         RESULTS_DF = pd.DataFrame(query.bindings)
         output_element.innerHTML = query_results_template.render(
             count=f"{len(query.bindings):,}", vars=query.vars, results=query.bindings
