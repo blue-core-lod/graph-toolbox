@@ -6,9 +6,9 @@ NAMESPACES = [
     ("sinopia", "http://sinopia.io/vocabulary/"),
 ]
 
-SINOPIA_GRAPH = rdflib.Graph()
+BF_GRAPH = rdflib.Graph()
 
 RESULTS_DF = None
 
 for ns in NAMESPACES:
-    SINOPIA_GRAPH.namespace_manager.bind(ns[0], ns[1])
+    BF_GRAPH.namespace_manager.bind(ns[0], ns[1])
