@@ -91,3 +91,32 @@ async def run_query(*args):
         )
     except Exception as e:
         output_element.content = f"""<h2>Query Error</h2><p>{e}</p>"""
+
+
+async def run_summary_query(event):
+    data_query = getattr(event.target.attributes, 'data-query')
+
+    match data_query.value:
+        case "all":
+            sparql_query =  """SELECT ?subject ?predicate ?object WHERE { ?subject ?predicate ?object . }"""
+
+        case "object":
+            sparql_query = """SELECT DISTINCT ?object WHERE { ?s ?p ?object . }"""
+
+        case "predicate":
+            sparql_query = """SELECT DISTINCT ?predicate WHERE { ?s ?predicate ?o . }"""
+
+        case "subject":
+            sparql_query = """SELECT DISTINCT ?subject WHERE { ?subject ?p ?o . }"""
+
+          
+            
+    query_element = js.document.getElementById("bf-sparql-queries")
+    query_element.innerHTML = sparql_query
+    sparql_tab = js.document.querySelector('#toolkitTab button[data-bs-target="#sparql"]')
+    sparql_tab.click()
+    run_query_btn = js.document.getElementById("run-query-btn")
+    run_query_btn.click()
+
+
+    
