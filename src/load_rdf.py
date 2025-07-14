@@ -68,22 +68,9 @@ async def _get_group_graph(group: str, api_url: str, limit: int = 2_500) -> None
 async def build_graph(*args) -> rdflib.Graph:
     global BF_GRAPH
 
-    groups_selected = js.document.getElementById("env-groups")
     individual_resources = js.document.getElementById("resource-urls")
-    sinopia_env_radio = js.document.getElementsByName("sinopia_env")
     loading_spinner = js.document.getElementById("graph-loading-status")
     loading_spinner.classList.remove("d-none")
-
-    sinopia_api_url = None
-
-    for elem in sinopia_env_radio:
-        if elem.checked:
-            sinopia_api_url = environments.get(elem.value)
-    for option in groups_selected.selectedOptions:
-        if option.value == "all":
-            BF_GRAPH = await _get_all_graph(sinopia_api_url)
-            break
-        BF_GRAPH = await _get_group_graph(option.value, sinopia_api_url)
 
     if len(individual_resources.value) > 0:
         resources = individual_resources.value.split(",")
@@ -97,54 +84,6 @@ async def build_graph(*args) -> rdflib.Graph:
     loading_spinner.classList.add("d-none")
     _summarize_graph(BF_GRAPH)
     return BF_GRAPH
-
-
-bf_summary_template = Template(
-    """<table class="table">
-  <thead>
-     <tr>
-        <th>Description</th>
-        <th>Value</th>
-     </tr>
-  </thead>
-  <tbody>
-     <tr>
-        <td>Total Triples</td>
-        <td>{{ graph|length }}</td>
-     </tr>
-     <tr>
-        <td>Subjects</td>
-        <td>{{ counts.subjCount }}</td>
-     </tr>
-     <tr>
-        <td>Predicates</td>
-        <td>{{ counts.predCount }}</td>
-     </tr>
-     <tr>
-        <td>Objects</td>
-        <td>{{ counts.objCount }}</td>
-     </tr>
-  </tbody>
-</table>
-<div class="mb-3">
-  <div class="dropdown">
-    <button class="btn btn-secondary dropdown-toggle" 
-            type="button" 
-            data-bs-toggle="dropdown"
-            id="rdf-download-file"
-            aria-expanded="false">
-      Download Graph
-    </button>
-    <ul class="dropdown-menu" aria-labelledby="rdf-download-file">
-        <li><a py-click="download_graph" data-serialization="ttl" class="dropdown-item" href="#">Turtle (.ttl)</a></li>
-        <li><a class="dropdown-item" py-click="download_graph" data-serialization="xml" href="#">XML (.rdf)</a></li>
-        <li><a class="dropdown-item" py-click="download_graph" data-serialization="json-ld" href="#">JSON-LD (.json)</a></li>
-         <li><a class="dropdown-item" py-click="download_graph" data-serialization="nt" href="#">N3 (.nt)</a></li>
-    </ul>
-  </div>
-</div>
-"""
-)
 
 
 async def download_graph(event):
@@ -187,14 +126,47 @@ async def download_graph(event):
 
 
 def _summarize_graph(graph: rdflib.Graph):
-    summary_div = js.document.getElementById("summarize-work-instance-item")
     query_result = graph.query(
         """SELECT (count(DISTINCT ?s) as ?subjCount) (count(DISTINCT ?p) as ?predCount) (count(DISTINCT ?o) as ?objCount) 
     WHERE { ?s ?p ?o . }"""
     )
-    summary_div.innerHTML = bf_summary_template.render(
-        graph=graph, counts=query_result.bindings[0]
+    total_triples_badge = js.document.getElementById("total-triples")
+    subjects_count_badge = js.document.getElementById("subjects-count")
+    predicates_count_badge = js.document.getElementById("predicates-count")
+    objects_count_badge = js.document.getElementById("objects-count")
+    counts=query_result.bindings[0]
+    subjects_count = int(counts.get('subjCount'))
+    predicates_count = int(counts.get('predCount'))
+    objects_count = int(counts.get('objCount'))
+    total_triples_badge.innerHTML = f"{len(graph):,}"
+    subjects_count_badge.innerHTML = f"{subjects_count:,}"
+    predicates_count_badge.innerHTML = f"{predicates_count :,}"
+    objects_count_badge.innerHTML = f"{objects_count:,}"
+    works_result = graph.query(
+        """
+        PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+        SELECT (count(DISTINCT ?s) as ?workCount)
+        WHERE { ?s rdf:type bf:Work . }
+        """
     )
+    works_count = works_result.bindings[0]
+    works_count_badge = js.document.getElementById("bf-works-count")
+    works_count_badge.innerHTML = f"{int(works_count.get('workCount')):,}"
+    instances_result = graph.query(
+        """
+        PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
+        PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+        SELECT (count(DISTINCT ?s) as ?instanceCount)
+        WHERE { ?s rdf:type bf:Instance . }
+        """
+    )
+    instances_count = instances_result.bindings[0]
+    instances_count_badge = js.document.getElementById("bf-instances-count")
+    instances_count_badge.innerHTML = f"{int(instances_count.get('instanceCount')):,}"
+    
 
 
 bf_template = Template(

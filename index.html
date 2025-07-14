@@ -20,16 +20,72 @@
       <div class="col-4">
        <img src="static/img/blue-core-v1.svg" class="float-start" alt="Blue Core Label" style="height: 100px">
       </div>
-      <div class="col-8">
+      <div class="col-6">
        <h1>Graph Toolbox</h1>
        <h4>Version <span id="version" ></span></h4>
       </div>
+      <div class="col-2">
+        <button class="btn btn-primary mt-1"  
+          data-bs-toggle="modal" data-bs-target="#loginModal">
+           <span id="login-action">
+            <i class="bi bi-box-arrow-in-right"></i>
+           </span>
+        </button>
+      </div>
     </div>
-    <div class="float-end sticky-top" style="background-color: rgb(255,255,255)">
+    <!-- <div class="float-end sticky-top" style="background-color: rgb(255,255,255)">
       <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#graph-repl-modal">
         <img width="64" alt="Python-logo-notext" src="./static/img/python-repl.svg">         
       </button>
+    </div> -->
+    <div class="row bg-secondary-subtle rounded-2">
+      <div class="col-2 d-flex flex-grow-1 justify-content-center align-items-center">
+        <h5>Graph Summary</h5>
+      </div>
+      <div class="col-6 d-flex flex-grow-1 justify-content-center align-items-center">
+        <div class="btn-group" role="group" aria-label="Basic example">
+          <button type="button" class="btn btn-success">Total Triples
+            <span class="badge text-bg-secondary" id="total-triples">0</span>
+          </button>
+          <button type="button" class="btn btn-info">
+            Subjects
+            <span class="badge text-bg-secondary" id="subjects-count">0</span>
+          </button>
+          <button type="button" class="btn btn-primary">
+            Predicates
+            <span class="badge text-bg-secondary" id="predicates-count">0</span>
+          </button>
+          <button type="button" class="btn btn-info">
+            Objects
+            <span class="badge text-bg-secondary" id="objects-count">0</span>
+          </button>
+        </div>
+      </div>
+      <div class="col-2">
+        <ul>
+          <li>BF Works: <span class="badge text-bg-secondary" id="bf-works-count">0</span></li>
+          <li>BF Instances: <span class="badge text-bg-secondary" id="bf-instances-count">0</span></li>
+        </ul>
+      </div>
+      <div class="col-2 d-flex flex-grow-1 justify-content-center align-items-center">
+        <div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle" 
+            type="button" 
+            data-bs-toggle="dropdown"
+            id="rdf-download-file"
+            aria-expanded="false">
+      Download Graph
+    </button>
+    <ul class="dropdown-menu" aria-labelledby="rdf-download-file">
+        <li><a py-click="download_graph" data-serialization="ttl" class="dropdown-item" href="#">Turtle (.ttl)</a></li>
+        <li><a class="dropdown-item" py-click="download_graph" data-serialization="xml" href="#">XML (.rdf)</a></li>
+        <li><a class="dropdown-item" py-click="download_graph" data-serialization="json-ld" href="#">JSON-LD (.json)</a></li>
+         <li><a class="dropdown-item" py-click="download_graph" data-serialization="nt" href="#">N3 (.nt)</a></li>
+    </ul>
+  </div>
+      </div>
     </div>
+    <br>
     <ul class="nav nav-tabs" id="myTab" role="tablist">
       <li class="nav-item" role="presentation">
         <button class="nav-link active" 
@@ -39,17 +95,7 @@
                 type="button" 
                 role="tab" 
                 aria-controls="home" 
-                aria-selected="true">Load RDF</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" 
-                id="bibframe-tab" 
-                data-bs-toggle="tab" 
-                data-bs-target="#graph-summary" 
-                type="button" 
-                role="tab" 
-                aria-controls="profile" 
-                aria-selected="false">Graph Summary</button>
+                aria-selected="true">Find &amp; Load RDF</button>
       </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link" 
@@ -59,7 +105,7 @@
                 type="button" 
                 role="tab" 
                 aria-controls="contact" 
-                aria-selected="false">SPARQL</button>
+                aria-selected="false">SPARQL Editor</button>
       </li>
       <li class="nav-item" role="presentation">
         <button class="nav-link" 
@@ -75,78 +121,47 @@
     <div class="tab-content" id="myTabContent">
       <div class="tab-pane fade show active" id="load" role="tabpanel" aria-labelledby="home-tab">
          <div class="container">
-           <div id="intro">
-             <h2>Login &amp; Environment</h2>
+           <div class="row">
+              <div class="col">
+                <h4>AI Assisted Search</h4>
+                <div class="form-text">
+                  Use an AI Search Agent to find resources in <a href="https://bcld.info">Blue Core</a>,
+                  <a href="https://sinopia.io">Sinopia</a>, or <a href="https://id.loc.gov/">id.loc.gov</a>.
+                </div>
+                <textarea class="form-control" id="ai-search-resources"></textarea>
+              </div>
+              <div class="col">
+                 <h4>Individual Resources</h4>
+                 <p class="form-text">Add URLs of Individual Resources to add to Graph (separate by commas)</p>
+                 <div>
+                   <textarea class="form-control" cols=25 rows=10 id="resource-urls"></textarea>
+                 </div>
+              </div>
            </div>
            <div class="row">
               <div class="col">
-                <div class="form-check">
-                   <input type="radio" py-click="show_groups" name="bluecore_env" value="http://localhost" class="form-check-input">
-                     <label for="http://localhost/" class="form-check-label">Localhost</label>
-                   </input>
-                </div>
-                <div class="form-check">
-                   <input type="radio" py-click="show_groups" value="https://dev.bcld.info" name="bluecore_env" class="form-check-input">
-                     <label for="https://dev.bcld.info" class="form-check-label">dev.bcld.info</label>
-                   </input>
-                </div>
-                <div class="form-check">
-                   <input type="radio" py-click="show_groups" value="https://bcld.info" name="bluecore_env" class="form-check-input">
-                     <label for="https://bcld.info" class="form-check-label">bcld.info</label>
-                   </input>
-                </div>
                 <div class="btn-group" role="group" aria-label="Basic Actions">
-                  <button class="btn btn-primary btn-lg"  
-                          data-bs-toggle="modal" data-bs-target="#loginModal">
-                    <span id="login-action">Login</span>
-                  </button>
                   <button class="btn btn-primary btn-lg" py-click="build_graph">
                      <i class="spinner-border d-none" id="graph-loading-status"></i>
                      Build Graph
                   </button>
                 </div>
               </div>
-              <div class="col">
-                 <h4>Groups</h4>
-                 <div>
-                    <select type="form-control" multiple="true" size=5 id="env-groups">
-
-
-                    </select>
-                 </div>
-                 <h4>Individual Resources</h4>
-                 <p>Add URLs to Individual Resources to add to Graph (separate by commas)</p>
-                 <div>
-                   <textarea class="form-control" cols=25 rows=10 id="resource-urls"></textarea>
-                 </div>
-              </div>
            </div>
          </div>
       </div>
-      <div class="tab-pane fade" id="graph-summary" role="tabpanel" aria-labelledby="profile-tab">
-         <div class="container">
-           <div id="bf-work-instance-item-rdf">
-             <h2>Graph Summary</h2>
-             <p>
-               Summary of graph loaded from the 
-               <a href="https://github.com/blue-core-lod/bluecore_api/">Blue Core API</a>
-             </p>
-           </div>
-          <div class="row">
-           <div class="col">
-              <div id="summarize-work-instance-item"></div>
-           </div>
-           </div>
-          </div>
-         </div>
-       <div class="tab-pane fade" id="sparql" role="tabpanel" aria-labelledby="contact-tab">
+      <div class="tab-pane fade" id="sparql" role="tabpanel" aria-labelledby="contact-tab">
         <div class="container">
           <div id="sparql-summary">
             <h2>SPARQL</h2>
-
           </div>
           <div class="row">
             <div class="col">
+              <label for="ai-sparql-help">AI Assistance</label>
+              <div class="form-text">
+                Get help constructing SPARQL queries to apply to the loaded graph
+              </div>
+              <textarea class="form-control" id="ai-sparql-help"></textarea>
               <div id="bf-sparql-query"></div>
             </div>
             <div class="col">
@@ -267,6 +282,22 @@
         <button type="button" id="loginModalhModalCloseBtn" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
+        <label for="bluecore_env">Blue Core Environment</label>
+        <div class="form-check">
+          <input type="radio" py-click="show_groups" name="bluecore_env" value="http://localhost" class="form-check-input">
+            <label for="http://localhost/" class="form-check-label">Localhost</label>
+           </input>
+        </div>
+        <div class="form-check">
+          <input type="radio" py-click="show_groups" value="https://dev.bcld.info" name="bluecore_env" class="form-check-input">
+            <label for="https://dev.bcld.info" class="form-check-label">dev.bcld.info</label>
+          </input>
+        </div>
+        <div class="form-check">
+            <input type="radio" py-click="show_groups" value="https://bcld.info" name="bluecore_env" class="form-check-input">
+              <label for="https://bcld.info" class="form-check-label">bcld.info</label>
+            </input>
+        </div>
        <div class="mb-3">
          <label for="keycloak_username" class="form-label">Username</label>
          <input type="text" class="form-control" id="keycloak_username" placeholder="Enter Username">
