@@ -1,11 +1,12 @@
-__version__ = "1.1.0"
 import asyncio
 import sys
 import js
 import pathlib
 import tomllib
 
+
 from pyodide.ffi import create_proxy
+from pyodide.http import pyfetch
 
 import helpers
 
@@ -20,18 +21,20 @@ SINOPIA = rdflib.Namespace("http://sinopia.io/vocabulary/")
 from bluecore_api import bluecore_login
 from sinopia_api import show_groups
 from load_rdf import bibframe_sparql as bf_sparql_widget, build_graph, download_graph
-from query_rdf import download_query_results, run_query
+from query_rdf import download_query_results, run_query, run_summary_query
 
 bf_sparql_widget("bf-sparql-query")
 
-pyproject = FILE.parent / "pyproject.toml"
+async def retrieve_version():
+    pyproject_request = await pyfetch("pyproject.toml")
+    pyproject = await pyproject_request.text()
+    project = tomllib.loads(pyproject)
+    version = project["project"]["version"]
+    return version
 
-if pyproject.exists():
-    with pyproject.open('rb') as fo: 
-        project = tomllib.load(fo)
-        version = project["project"]["version"]
-else:
-    version = __version__
+
+version = await retrieve_version()
+
 helpers.set_versions(version)
 
 splash_modal_close_btn = js.document.getElementById("splashModalCloseBtn")
