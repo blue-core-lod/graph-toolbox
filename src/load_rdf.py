@@ -200,7 +200,7 @@ sparql_template = Template(
     </textarea>
   </div>
   <div class="mb-3">
-    <button class="btn btn-primary" py-click="run_query">Run query</button>
+    <button class="btn btn-primary" py-click="run_query" id="run-query-btn">Run query</button>
   </div>
 </div>"""
 )
