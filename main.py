@@ -21,6 +21,7 @@ SINOPIA = rdflib.Namespace("http://sinopia.io/vocabulary/")
 from bluecore_api import bluecore_login
 from sinopia_api import show_groups
 from load_rdf import bibframe_sparql as bf_sparql_widget, build_graph, download_graph
+from marc import bf2marc, marc2bf
 from query_rdf import download_query_results, run_query, run_summary_query
 
 bf_sparql_widget("bf-sparql-query")

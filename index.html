@@ -117,6 +117,16 @@
                 aria-controls="contact" 
                 aria-selected="false">Batches</button>
       </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" 
+                id="marc-tab" 
+                data-bs-toggle="tab" 
+                data-bs-target="#marc" 
+                type="button" 
+                role="tab" 
+                aria-controls="contact" 
+                aria-selected="false">MARC import/export</button>
+      </li>
     </ul>
     <div class="tab-content" id="myTabContent">
       <div class="tab-pane fade show active" id="load" role="tabpanel" aria-labelledby="home-tab">
@@ -170,7 +180,7 @@
           </div>
         </div>
        </div>
-       <div class="tab-pane fade" id="batch" role="tabpanel" aria-labelledby="contact-tab">
+       <div class="tab-pane fade" id="batch" role="tabpanel" aria-labelledby="batch-tab">
         <div class="container">
           <h2>Batch Management</h2>
           <h3>Constrained Bound Descriptions (CBD)</h3>
@@ -214,6 +224,35 @@
                 <button class="btn btn-warning btn-lg">Run Bulk Update</button>
             </div>
           </div>
+        </div>
+       </div>
+       <div class="tab-pane fade" id="marc" role="tabpanel" aria-labelledby="batch-tab">
+        <div class="container">
+          <h2>MARC Import &amp; Export</h2>
+          <div class="d-none alert alert-danger" role="alert" id="marc-error">
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+          <div class="row">
+            <div class="col">
+             <p>
+              Upload a MARC21 or MARC XML file and convert to BIBFRAME
+              using <a href="https://github.com/lcnetdev/marc2bibframe2">marc2bibframe2</a>.
+             </p>
+             <div class="mb-3">
+              <label for="marc-file" class="form-label">Upload MARC file</label>
+              <div class="input-group">
+                <input class="form-control" type="file" id="marc-file">
+                <button class="btn btn-outline-secondary" type="button" id="marc-file-btn" py-click="marc2bf">Convert</button>
+              </div>
+              </div>
+            </div>
+            <div class="col">
+              <p>
+               Export a BIBFRAME Works and Instances to MARC21 or MARC XML using 
+               <a href="https://github.com/lcnetdev/bibframe2marc">bibframe2marc</a>.
+              </p>
+            </div>
+          </div>      
         </div>
        </div>
     </div>
