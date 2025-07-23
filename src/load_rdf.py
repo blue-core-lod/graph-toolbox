@@ -82,7 +82,7 @@ async def build_graph(*args) -> rdflib.Graph:
             )
             BF_GRAPH.parse(data=turtle_rdf, format="turtle")
     loading_spinner.classList.add("d-none")
-    _summarize_graph(BF_GRAPH)
+    summarize_graph(BF_GRAPH)
     return BF_GRAPH
 
 
@@ -125,7 +125,7 @@ async def download_graph(event):
     js.document.body.removeChild(anchor)
 
 
-def _summarize_graph(graph: rdflib.Graph):
+def summarize_graph(graph: rdflib.Graph):
     query_result = graph.query(
         """SELECT (count(DISTINCT ?s) as ?subjCount) (count(DISTINCT ?p) as ?predCount) (count(DISTINCT ?o) as ?objCount) 
     WHERE { ?s ?p ?o . }"""
