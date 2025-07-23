@@ -5,12 +5,14 @@ from js import console, document, Uint8Array
 from lxml import etree
 from pyscript import fetch
 
+from load_rdf import summarize_graph
 from state import BF_GRAPH
 
 async def bf2marc(event):
     pass
 
 async def marc2bf(event):
+    global BF_GRAPH
     marc_upload_file = document.querySelector("#marc-file")
     error_msg = document.querySelector("#marc-error")
     if marc_upload_file.files.length < 1:
@@ -26,18 +28,23 @@ async def marc2bf(event):
             raw_marc = bytes(Uint8Array.new(array_buffer))
             marc_reader = pymarc.MARCReader(raw_marc)
             marc_record = next(marc_reader)
-            marc_xml = io.BytesIO()
-            writer = pymarc.XMLWriter(marc_xml)
+            marc_bytes = io.BytesIO()
+            writer = pymarc.XMLWriter(marc_bytes)
             writer.write(marc_record)
             writer.close(close_fh=False)
+            marc_xml = marc_bytes.getvalue()
 
         case "xml":
             marc_xml = await raw_marc_file.text()
 
-    marc2bf_xslt_request = await fetch("static/xslt/marc2bibframe2.xsl")
-    marc2bf_xslt_file = await marc2bf_xslt_request.text()
-    xslt_root = etree.XML(marc2bf_xslt_file)
+        case _:
+            error_msg.classList.remove("d-none")
+            error_msg.innerHTML = f"Unknown file type {raw_marc_file.name}, should be mrc, marc, or xml" + error_msg.innerHTML
+            return
+
+    xslt_root = etree.parse("./marc2bf/marc2bibframe2.xsl")
     marc2bf_xslt = etree.XSLT(xslt_root)
-    marc_doc = etree.parse(marc_xml)
+    marc_doc = etree.XML(marc_xml)
     bf_xml = marc2bf_xslt(marc_doc)
-    BF_GRAPH.parse(data=bf_xml, format='rdf')
+    BF_GRAPH.parse(data=str(bf_xml), format='xml')
+    summarize_graph(BF_GRAPH)

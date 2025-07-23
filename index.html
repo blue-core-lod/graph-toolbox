@@ -87,7 +87,7 @@
     </div>
     <br>
     <ul class="nav nav-tabs" id="toolkitTab" role="tablist">
-      <li class="nav-item" role="presentation">
+      <li class="nav-item me-1" role="presentation">
         <button class="nav-link active" 
                 id="home-tab" 
                 data-bs-toggle="tab" 
@@ -97,7 +97,7 @@
                 aria-controls="home" 
                 aria-selected="true">Find &amp; Load RDF</button>
       </li>
-      <li class="nav-item" role="presentation">
+      <li class="nav-item me-1" role="presentation">
         <button class="nav-link" 
                 id="contact-tab" 
                 data-bs-toggle="tab" 
@@ -107,7 +107,7 @@
                 aria-controls="contact" 
                 aria-selected="false">SPARQL Editor</button>
       </li>
-      <li class="nav-item" role="presentation">
+      <li class="nav-item me-1" role="presentation">
         <button class="nav-link" 
                 id="batch-tab" 
                 data-bs-toggle="tab" 
@@ -178,6 +178,13 @@
               <div id="bf-sparql-results"></div>
             </div>
           </div>
+          <div id="err-div" class="bg-red text-blue text-center border-t-4"></div>
+              <script type="py" id="repl" terminal worker>
+               import code
+
+               code.interact()
+              </script>
+          <div id="output" class="p-4"></div>
         </div>
        </div>
        <div class="tab-pane fade" id="batch" role="tabpanel" aria-labelledby="batch-tab">
@@ -248,7 +255,7 @@
             </div>
             <div class="col">
               <p>
-               Export a BIBFRAME Works and Instances to MARC21 or MARC XML using 
+               Export BIBFRAME Works and Instances to MARC21 or MARC XML using 
                <a href="https://github.com/lcnetdev/bibframe2marc">bibframe2marc</a>.
               </p>
             </div>
@@ -284,7 +291,6 @@
                code.interact()
               </script>
               <div id="output" class="p-4"></div>
-              <div id="err-div"></div>
             </div>
           </div>
           <div class="modal-footer">
