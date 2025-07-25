@@ -7,7 +7,7 @@
     "lxml",
     "./static/wheels/isodate-0.6.1-py2.py3-none-any.whl",
     "./static/wheels/pymarc-5.3.1-py3-none-any.whl",
-    "./static/wheels/rdflib-7.1.1-py3-none-any.whl"
+    "./static/wheels/rdflib-7.1.4-py3-none-any.whl"
   ],
   "files": {
     "./src/helpers.py": "./helpers.py",
@@ -50,6 +50,7 @@
     "./xslt/marc2bf/languageCrosswalk.xml": "./marc2bf/conf/languageCrosswalk.xml",
     "./xslt/marc2bf/map880.xml": "./marc2bf/conf/map880.xml",
     "./xslt/marc2bf/scriptCrosswalk.xml": "./marc2bf/conf/scriptCrosswalk.xml",
-    "./xslt/marc2bf/subjectThesaurus.xml": "./marc2bf/conf/subjectThesaurus.xml"
+    "./xslt/marc2bf/subjectThesaurus.xml": "./marc2bf/conf/subjectThesaurus.xml",
+    "./xslt/bibframe2marc.xsl": "./bibframe2marc.xsl"
   }
 }
