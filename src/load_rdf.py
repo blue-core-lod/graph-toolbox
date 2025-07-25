@@ -18,53 +18,6 @@ def skolemize_resource(resource_url: str, raw_rdf: str) -> str:
     return skolemize_graph.serialize(format="turtle")
 
 
-async def _get_all_graph(api_url: str, limit: int = 250) -> None:
-    next_url = f"{api_url}resource?limit={limit}"
-    loading_resources = True
-    while loading_resources:
-        result = await pyfetch(next_url)
-        payload = await result.json()
-        for i, row in enumerate(payload["data"]):
-            if not "data" in row:
-                js.console.log(f"No data for {i}")
-                continue
-            if not "uri" in row:
-                js.console.log("No URI for resource {i}")
-                continue
-            try:
-                turtle_rdf = skolemize_resource(row["uri"], row["data"])
-                BF_GRAPH.parse(data=turtle_rdf, format="turtle")
-            except Exception as e:
-                js.console.log(f"Failed to parse {row['uri']} {e}")
-        next_url = payload["links"].get("next")
-        if next_url is None:
-            loading_resources = False
-    return BF_GRAPH
-
-
-async def _get_group_graph(group: str, api_url: str, limit: int = 2_500) -> None:
-    start = 0
-    if not api_url.endswith("/"):
-        api_url = f"{api_url}/"
-    initial_url = f"{api_url}resource?limit={limit}&group={group}&start={start}"
-    initial_result = await pyfetch(initial_url)
-    group_payload = await initial_result.json()
-    for i, row in enumerate(group_payload["data"]):
-        if not "data" in row:
-            js.console.log(f"No RDF found for {row.get('uri', 'bad url')}")
-            continue
-        if not "uri" in row:
-            js.console.log(f"No URI for {i}")
-            continue
-        try:
-            turtle_rdf = skolemize_resource(row["uri"], row["data"])
-            BF_GRAPH.parse(data=turtle_rdf, format="turtle")
-        except Exception as e:
-            js.console.log(f"Cannot load {row['uri']} Error:\n{e}")
-            continue
-    return BF_GRAPH
-
-
 async def build_graph(*args) -> rdflib.Graph:
     global BF_GRAPH
 
@@ -168,30 +121,6 @@ def summarize_graph(graph: rdflib.Graph):
     instances_count_badge.innerHTML = f"{int(instances_count.get('instanceCount')):,}"
     
 
-
-bf_template = Template(
-    """<div class="col">
-{% for bf_entity in entities %}
-  {% set id = bf_entity[1].split("/")[-1] %}
-  <div class="mb-3">
-    <label for="{{ id }}" class="col-form-label">BIBFRAME {{ bf_entity[0] }} URL</label> 
-    <input type="text" id="{{ id }}" class="form-control bf-entity" value="{{ bf_entity[1] }}">
-  </div>
-{% endfor %}
-  <button type="button" id="build-graph-btn" class="btn btn-primary">Build RDF Graph</button>
-</div>"""
-)
-
-
-def bibframe(element_id: str, urls: list):
-    form_element = js.document.getElementById(element_id)
-    form_element.classList.add("col")
-    entities = zip(("Work", "Instance", "Item"), urls)
-    form_element.innerHTML = bf_template.render(entities=entities)
-    button = js.document.getElementById("build-graph-btn")
-    button.addEventListener("click", create_proxy(_build_graph))
-
-
 sparql_template = Template(
     """<div class="mb-3">
     <label for="bf-sparql-queries" class="form-label">SPARQL Query</label>
@@ -210,3 +139,15 @@ def bibframe_sparql(element_id: str):
     wrapper_div = js.document.getElementById(element_id)
     all_namespaces = NAMESPACES + [("rdf", rdflib.RDF), ("rdfs", rdflib.RDFS)]
     wrapper_div.innerHTML = sparql_template.render(namespaces=all_namespaces)
+
+
+async def load_cbd_file(event):
+    global BF_GRAPH
+
+    cbd_file_input = js.document.getElementById("cbd-file")
+    if cbd_file_input.files.length > 0:
+        cbd_file = cbd_file_input.files.item(0)
+        rdf_type = rdflib.util.guess_format(cbd_file_input.value)
+        raw_rdf = await cbd_file.text()
+        BF_GRAPH.parse(data=raw_rdf, format=rdf_type)
+        _summarize_graph(BF_GRAPH)

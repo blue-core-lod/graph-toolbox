@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="https://pyscript.net/releases/2025.5.1/core.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
     <link href="static/css/main.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
     <script type="module" src="https://pyscript.net/releases/2025.5.1/core.js"></script>
     <style>
@@ -68,21 +68,24 @@
         </ul>
       </div>
       <div class="col-2 d-flex flex-grow-1 justify-content-center align-items-center">
+        <button type="button" class="btn btn-warning me-1" py-click="save_bluecore">
+          <i class="bi bi-floppy"></i>
+        </button>
         <div class="dropdown">
-    <button class="btn btn-secondary dropdown-toggle" 
-            type="button" 
-            data-bs-toggle="dropdown"
-            id="rdf-download-file"
-            aria-expanded="false">
-      Download Graph
-    </button>
-    <ul class="dropdown-menu" aria-labelledby="rdf-download-file">
-        <li><a py-click="download_graph" data-serialization="ttl" class="dropdown-item" href="#">Turtle (.ttl)</a></li>
-        <li><a class="dropdown-item" py-click="download_graph" data-serialization="xml" href="#">XML (.rdf)</a></li>
-        <li><a class="dropdown-item" py-click="download_graph" data-serialization="json-ld" href="#">JSON-LD (.json)</a></li>
-         <li><a class="dropdown-item" py-click="download_graph" data-serialization="nt" href="#">N3 (.nt)</a></li>
-    </ul>
-  </div>
+          <button class="btn btn-secondary dropdown-toggle" 
+                  type="button" 
+                  data-bs-toggle="dropdown"
+                  id="rdf-download-file"
+                  aria-expanded="false">
+            <i class="bi bi-cloud-download"></i>
+          </button>
+          <ul class="dropdown-menu" aria-labelledby="rdf-download-file">
+              <li><a py-click="download_graph" data-serialization="ttl" class="dropdown-item" href="#">Turtle (.ttl)</a></li>
+              <li><a class="dropdown-item" py-click="download_graph" data-serialization="xml" href="#">XML (.rdf)</a></li>
+              <li><a class="dropdown-item" py-click="download_graph" data-serialization="json-ld" href="#">JSON-LD (.json)</a></li>
+              <li><a class="dropdown-item" py-click="download_graph" data-serialization="nt" href="#">N3 (.nt)</a></li>
+          </ul>
+        </div>
       </div>
     </div>
     <br>
@@ -146,6 +149,15 @@
                  <div>
                    <textarea class="form-control" cols=25 rows=10 id="resource-urls"></textarea>
                  </div>
+                 <hr>
+                 <h4>Constrained Bound Descriptions (CBD)</h4>
+                 <div>
+                    <label for="cbd-file" class="form-label">Upload CBD file</label>
+                    <div class="input-group">
+                      <input class="form-control" type="file" id="cbd-file">
+                      <button class="btn btn-outline-secondary" type="button" id="cbd-file-btn" py-click="load_cbd_file">Load</button>
+                    </div>
+                  </div>
               </div>
            </div>
            <div class="row">
@@ -190,7 +202,6 @@
        <div class="tab-pane fade" id="batch" role="tabpanel" aria-labelledby="batch-tab">
         <div class="container">
           <h2>Batch Management</h2>
-          <h3>Constrained Bound Descriptions (CBD)</h3>
           <div class="row">
             <div class="col">
               <div class="mb-3">
