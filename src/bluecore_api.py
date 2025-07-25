@@ -57,6 +57,7 @@ async def save_bluecore(event):
         return
     access_token = sessionStorage.getItem("keycloak_access_token")
     form_data = FormData.new()
+    
     bf_upload_file = File.new([BF_GRAPH.serialize(format='json-ld')],
                               "upload",
                               { "type": "text/plain"})

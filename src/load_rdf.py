@@ -72,7 +72,7 @@ async def download_graph(event):
     blob = js.Blob.new([contents], {"type": mime_type})
     anchor = js.document.createElement("a")
     anchor.href = js.URL.createObjectURL(blob)
-    anchor.download = f"sinopia-graph.{serialization}"
+    anchor.download = f"bluecore-graph.{serialization}"
     js.document.body.appendChild(anchor)
     anchor.click()
     js.document.body.removeChild(anchor)
