@@ -1,23 +1,66 @@
 import io
 import pymarc
+import rdflib
 
-from js import console, document, Uint8Array
+from js import alert, Blob, console, document, Uint8Array, URL
 from lxml import etree
 from pyscript import fetch
 
 from load_rdf import summarize_graph
 from state import BF_GRAPH
 
+
+async def _bf_graph_to_xml(bf_graph: rdflib.Graph):
+    raw_xml = bf_graph.serialize(format="xml")
+    return etree.XML(bytes(raw_xml, encoding="utf-8"))
+
+
 async def bf2marc(event):
-    pass
+    global BF_GRAPH
+    anchor = event.target
+    marc_format = anchor.getAttribute("data-marc-format")
+
+    if len(BF_GRAPH) < 1:
+        alert(f"ERROR! Cannot export empty graph to {marc_format[0:4].upper()} {marc_format[4:]}")
+        return
+
+    xslt_root = etree.parse("./bibframe2marc.xsl")
+    bf2marc_xslt = etree.XSLT(xslt_root)
+    bf_xml = await _bf_graph_to_xml(BF_GRAPH)
+    marc_xml = bf2marc_xslt(bf_xml)
+
+    match marc_format:
+
+        case "marc21":
+            marc_bytes = io.BytesIO()
+            marc_bytes.write(marc_xml)
+            marc_record = pymarc.marcxml.parse_xml(marc_bytes)
+            mime_type = "application/octet-stream"
+            serialization = "mrc"
+
+        case "marcXML":
+            marc_record = marc_xml
+            mime_type = "application/rdf+xml"
+            serialization = "xml"
+
+        case _:
+            alert(f"ERROR! Unknown MARC Format {marc_format}")
+            return
+
+    blob = Blob.new([marc_record], {"type": mime_type})
+    anchor = document.createElement("a")
+    anchor.href = URL.createObjectURL(blob)
+    anchor.download = f"bf-marc.{serialization}"
+    document.body.appendChild(anchor)
+    anchor.click()
+    document.body.removeChild(anchor)
+
 
 async def marc2bf(event):
     global BF_GRAPH
     marc_upload_file = document.querySelector("#marc-file")
-    error_msg = document.querySelector("#marc-error")
     if marc_upload_file.files.length < 1:
-        error_msg.classList.remove("d-none")
-        error_msg.innerHTML = "Missing MARC21 or MARC XML file." + error_msg.innerHTML 
+        alert("ERROR! Missing MARC21 or MARC XML file.") 
         return
     raw_marc_file = marc_upload_file.files.item(0)
     ext = raw_marc_file.name.split(".")[-1]
@@ -38,13 +81,15 @@ async def marc2bf(event):
             marc_xml = await raw_marc_file.text()
 
         case _:
-            error_msg.classList.remove("d-none")
-            error_msg.innerHTML = f"Unknown file type {raw_marc_file.name}, should be mrc, marc, or xml" + error_msg.innerHTML
+            alert(f"ERROR! Unknown file type {raw_marc_file.name}, should be mrc, marc, or xml")
             return
 
     xslt_root = etree.parse("./marc2bf/marc2bibframe2.xsl")
     marc2bf_xslt = etree.XSLT(xslt_root)
     marc_doc = etree.XML(marc_xml)
-    bf_xml = marc2bf_xslt(marc_doc)
-    BF_GRAPH.parse(data=str(bf_xml), format='xml')
-    summarize_graph(BF_GRAPH)
+    try:
+        bf_xml = marc2bf_xslt(marc_doc)
+        BF_GRAPH.parse(data=str(bf_xml), format='xml')
+        summarize_graph(BF_GRAPH)
+    except Exception as e:
+        alert(f"ERROR! Failed to convert MARC to BIBFRAME\n{e}")
