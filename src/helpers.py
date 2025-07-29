@@ -1,7 +1,9 @@
 import markdown
+import rdflib
 
 from js import document
     
+BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
 
 def set_versions(version):
     version_element = document.getElementById("version")

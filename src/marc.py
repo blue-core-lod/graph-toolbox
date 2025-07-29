@@ -6,12 +6,17 @@ from js import alert, Blob, console, document, Uint8Array, URL
 from lxml import etree
 from pyscript import fetch
 
+from helpers import BF
 from load_rdf import summarize_graph
 from state import BF_GRAPH
 
 
 async def _bf_graph_to_xml(bf_graph: rdflib.Graph):
-    raw_xml = bf_graph.serialize(format="xml")
+    instances = [instance for instance in bf_graph.subjects(predicate=rdflib.RDF.type, object=BF.Instance)]
+    if len(instances) < 1:
+        alert(f"ERROR! Need at least 1 BIBFRAME Instance")
+    #bf_graph = bf_graph.de_skolemize(uriref=instances[0])
+    raw_xml = bf_graph.serialize(format="pretty-xml")
     return etree.XML(bytes(raw_xml, encoding="utf-8"))
 
 
@@ -32,9 +37,13 @@ async def bf2marc(event):
     match marc_format:
 
         case "marc21":
-            marc_bytes = io.BytesIO()
-            marc_bytes.write(marc_xml)
-            marc_record = pymarc.marcxml.parse_xml(marc_bytes)
+            marc_io = io.StringIO()
+            marc_io.write(str(marc_xml))
+            
+            # console.log(f"Marc bytes", marc_bytes.read())
+            # raw_xml = str(marc_xml)
+            # console.log(raw_xml)
+            marc_record = pymarc.marcxml.parse_xml_to_array(marc_io)[0]
             mime_type = "application/octet-stream"
             serialization = "mrc"
 

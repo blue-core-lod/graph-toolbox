@@ -15,7 +15,6 @@ import rdflib
 
 FILE = pathlib.Path(".")
 
-BIBFRAME = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
 SINOPIA = rdflib.Namespace("http://sinopia.io/vocabulary/")
 
 from bluecore_api import bluecore_login, save_bluecore
