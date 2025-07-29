@@ -14,8 +14,9 @@ from sinopia_api import environments
 def skolemize_resource(resource_url: str, raw_rdf: str) -> str:
     resource_graph = rdflib.Graph()
     resource_graph.parse(data=json.dumps(raw_rdf), format="json-ld")
-    skolemize_graph = resource_graph.skolemize(basepath=f"{resource_url.strip()}#")
-    return skolemize_graph.serialize(format="turtle")
+    #skolemize_graph = resource_graph.skolemize(basepath=f"{resource_url.strip()}#")
+    #return skolemize_graph.serialize(format="turtle")
+    return resource_graph.serialize(format="turtle")
 
 
 async def build_graph(*args) -> rdflib.Graph:
@@ -150,4 +151,4 @@ async def load_cbd_file(event):
         rdf_type = rdflib.util.guess_format(cbd_file_input.value)
         raw_rdf = await cbd_file.text()
         BF_GRAPH.parse(data=raw_rdf, format=rdf_type)
-        _summarize_graph(BF_GRAPH)
+        summarize_graph(BF_GRAPH)
