@@ -37,13 +37,9 @@ async def bf2marc(event):
     match marc_format:
 
         case "marc21":
-            marc_io = io.StringIO()
-            marc_io.write(str(marc_xml))
-            
-            # console.log(f"Marc bytes", marc_bytes.read())
-            # raw_xml = str(marc_xml)
-            # console.log(raw_xml)
-            marc_record = pymarc.marcxml.parse_xml_to_array(marc_io)[0]
+            with open("temp.xml", "w+") as fo:
+                fo.write(str(marc_xml))
+            marc_record = pymarc.marcxml.parse_xml_to_array("temp.xml")[0]
             mime_type = "application/octet-stream"
             serialization = "mrc"
 
