@@ -1,0 +1,42 @@
+<div class="container">
+    <div class="row bg-secondary-subtle rounded-2 mb-2">
+        <div class="col-2 d-flex flex-grow-1 justify-content-center align-items-center">
+        <h5>Graph Summary</h5>
+        </div>
+        <div class="col-6 d-flex flex-grow-1 justify-content-center align-items-center">
+        <div class="btn-group" role="group" aria-label="Basic example">
+            <button type="button" class="btn btn-success" py-click="run_summary_query" data-query="all">Total Triples
+            <span class="badge text-bg-secondary" id="total-triples">0</span>
+            </button>
+            <button type="button" class="btn btn-info" py-click="run_summary_query" data-query="subject">
+            Subjects
+            <span class="badge text-bg-secondary" id="subjects-count">0</span>
+            </button>
+            <button type="button" class="btn btn-primary" py-click="run_summary_query" data-query="predicate">
+            Predicates
+            <span class="badge text-bg-secondary" id="predicates-count">0</span>
+            </button>
+            <button type="button" class="btn btn-info" py-click="run_summary_query" data-query="object">
+            Objects
+            <span class="badge text-bg-secondary" id="objects-count">0</span>
+            </button>
+        </div>
+        </div>
+        <div class="col-2">
+        <ul>
+            <li>BF Works: <span class="badge text-bg-secondary" id="bf-works-count">0</span></li>
+            <li>BF Instances: <span class="badge text-bg-secondary" id="bf-instances-count">0</span></li>
+        </ul>
+        </div>
+        <div class="col-2 d-flex flex-grow-1 justify-content-center align-items-center">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#bulk-modal" >
+                    <i data-bs-toggle="tooltip" data-bs-title="Bulk Updates" class="bi bi-files"></i>
+                </button>
+                <button type="button" class="btn btn-warning" data-bs-toggle="tooltip" data-bs-title="Save Entities to Blue Core" py-click="save_bluecore">
+                    <i class="bi bi-floppy"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

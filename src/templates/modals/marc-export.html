@@ -1,0 +1,31 @@
+<div class="modal fade" tabindex="-1" id="marc21-export-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"> 
+                <h5 class="modal-title"><img src="static/img/marc21h2.gif" width="32px" height="32px"></img> MARC Export</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    Export BIBFRAME Works and Instances to MARC21 or MARC XML using 
+                    <a href="https://github.com/lcnetdev/bibframe2marc">bibframe2marc</a>.
+                </p>
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" 
+                            type="button" data-bs-toggle="dropdown"
+                            id="marc-download"
+                            aria-expanded="false">
+                        Download MARC
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" py-click="bf2marc" data-marc-format="marc21" href="#">MARC21</a></li>
+                        <li><a class="dropdown-item" py-click="bf2marc" data-marc-format="marcXML" href="#">MARC XML</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

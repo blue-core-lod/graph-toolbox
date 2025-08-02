@@ -1,0 +1,32 @@
+<!-- Load modal -->
+<div class="modal fade" tabindex="-1" id="cbd-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"> 
+                <h5 class="modal-title">Constrained Bound Descriptions (CBD)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label for="cbd-file" class="form-label">Upload file</label>
+                <div class="input-group">
+                    <input class="form-control" type="file" id="cbd-file">
+                    <button class="btn btn-outline-secondary" type="button" id="cbd-file-btn" py-click="load_cbd_file">Load</button>
+                </div>
+                <label for="cbd-file" class="form-label">CBD URL</label>
+                <div class="input-group">
+                    <input type="text" id="cbd-url" class="form-control" placeholder="Load CBD URL" 
+                    aria-label="Load CBD URL" aria-describedby="cbd-url-btn">
+                    <button class="btn btn-outline-secondary" type="button" id="cbd-url-btn">Load</button>
+                </div>
+                <label for="cbd-zip-file" class="form-label">Upload Multiple CBD records in a Zip File</label>
+                <div class="input-group">
+                    <input class="form-control" type="file" id="cbd-zip-file">
+                    <button class="btn btn-outline-secondary" type="button" id="cbd-file-btn" py-click="load_cbd_zip_file">Load</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cbd-modal-close-btn">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,24 @@
+<div class="modal fade" tabindex="-1" id="marc21-import-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"> 
+                <h5 class="modal-title"><img src="static/img/marc21h2.gif" width="32px" height="32px"></img> MARC Import</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                Upload a MARC21 or MARC XML file and convert to BIBFRAME
+                using <a href="https://github.com/lcnetdev/marc2bibframe2">marc2bibframe2</a>.
+                </p>
+                <label for="marc-file" class="form-label">Upload MARC file</label>
+                <div class="input-group">
+                    <input class="form-control" type="file" id="marc-file">
+                    <button class="btn btn-outline-secondary" type="button" id="marc-file-btn" py-click="marc2bf">Convert</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

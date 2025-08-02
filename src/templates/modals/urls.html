@@ -1,0 +1,22 @@
+<div class="modal fade" tabindex="-1" id="urls-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header"> 
+                <h5 class="modal-title"><i class="bi bi-window-stack"></i> Individual URLs</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="form-text">Add URLs of Individual Resources to add to Graph (separate by commas)</p>
+                <div>
+                    <textarea class="form-control" cols=25 rows=3 id="resource-urls"></textarea>
+                </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" py-click="build_graph">
+                     <i class="spinner-border d-none" id="graph-loading-status"></i>
+                     Build Graph
+                  </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,41 @@
+<div class="bg-secondary-subtle rounded-2 m-1 p-1">
+    <div class="d-grid mb-2">
+        <div class="text-center fw-semibold">Import</div>
+        <div class="btn-group-vertical" role="group" aria-label="Import button group">
+            <button type="button" class="btn btn-info btn-lg" data-bs-toggle="modal" data-bs-target="#urls-modal"><i class="bi bi-window-stack" data-bs-toggle="tooltip" data-bs-title="Load URLs"></i></button> 
+            <button type="button" data-bs-toggle="modal" data-bs-target="#cbd-modal" class="btn btn-info btn-lg"><i class="bi bi-box-seam" data-bs-toggle="tooltip" data-bs-title="Load Constrained Bound Descriptions (CBDs)"></i></button>
+            <button type="button" data-bs-toggle="modal" data-bs-target="#marc21-import-modal" class="btn btn-info btn-lg"><img data-bs-toggle="tooltip" data-bs-title="Load MARC file" src="static/img/marc21h2.gif" width="32px" height="32px"></img></button>
+        </div>
+    </div>
+    <div class="d-grid mb-2">
+        <div class="text-center fw-semibold">Export</div>
+        <div class="btn-group-vertical" role="group" aria-label="Export button group">
+            <div class="btn-group" role="group">
+                <button class="btn btn-success dropdown-toggle btn-lg" 
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        id="rdf-download-file"
+                        aria-expanded="false">
+                <i  data-bs-toggle="tooltip" data-bs-title="Download RDF" class="bi bi-cloud-download"></i>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="rdf-download-file">
+                    <li><a py-click="download_graph" data-serialization="ttl" class="dropdown-item" href="#">Turtle (.ttl)</a></li>
+                    <li><a class="dropdown-item" py-click="download_graph" data-serialization="xml" href="#"><i class="bi bi-filetype-xml"></i> XML (.rdf)</a></li>
+                    <li><a class="dropdown-item" py-click="download_graph" data-serialization="json-ld" href="#"><i class="bi bi-filetype-json"></i> JSON-LD (.json)</a></li>
+                    <li><a class="dropdown-item" py-click="download_graph" data-serialization="nt" href="#">N3 (.nt)</a></li>
+                </ul>
+            </div>
+            <button type="button" data-bs-toggle="modal" data-bs-target="#marc21-export-modal" class="btn btn-success btn-lg"><img src="static/img/marc21h2.gif" data-bs-toggle="tooltip" data-bs-title="Download MARC file" width="32px" height="32px"></img></button>
+        </div>
+    </div>
+    <div class="d-grid mb-2">
+        <div class="text-center fw-semibold">Utils</div>
+        <div class="btn-group-vertical" role="group" aria-label="Utilities button group">
+          <button class="btn btn-light btn-lg" py-click="helpers.py_repl">
+             <img src="static/img/python-repl.svg" alt="Python REPL" width="32px" height="32px" data-bs-toggle="tooltip" data-bs-title="Open Python REPL"></img>
+          </button>
+        </div>
+    </div>
+</div>
+
+
