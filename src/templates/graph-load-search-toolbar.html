@@ -1,0 +1,42 @@
+<div class="bg-secondary-subtle rounded-2">
+
+<div class="m-1">
+    <h4>AI Assisted Search</h4>
+    <div class="form-text">
+        Use an AI Search Agent to find resources in <a href="https://bcld.info">Blue Core</a>,
+        <a href="https://sinopia.io">Sinopia</a>, or <a href="https://id.loc.gov/">id.loc.gov</a>.
+    </div>
+    <textarea class="form-control" id="ai-search-resources"></textarea>
+</div>
+<hr>
+<div class="m-1">
+    <h4>Individual Resources</h4>
+    <p class="form-text">Add URLs of Individual Resources to add to Graph (separate by commas)</p>
+    <div>
+    <textarea class="form-control" cols=25 rows=10 id="resource-urls"></textarea>
+    </div>
+</div>
+<hr>
+<h4>Constrained Bound Descriptions (CBD)</h4>
+<div>
+<label for="cbd-file" class="form-label">Upload CBD file</label>
+<div class="input-group">
+    <input class="form-control" type="file" id="cbd-file">
+    <button class="btn btn-outline-secondary" type="button" id="cbd-file-btn" py-click="load_cbd_file">Load</button>
+</div>
+</div>
+<hr>
+<div class="m-1">
+    <p>
+    Upload a MARC21 or MARC XML file and convert to BIBFRAME
+    using <a href="https://github.com/lcnetdev/marc2bibframe2">marc2bibframe2</a>.
+    </p>
+    <div class="mb-3">
+        <label for="marc-file" class="form-label">Upload MARC file</label>
+        <div class="input-group">
+            <input class="form-control" type="file" id="marc-file">
+            <button class="btn btn-outline-secondary" type="button" id="marc-file-btn" py-click="marc2bf">Convert</button>
+        </div>
+    </div>
+</div>
+</div>

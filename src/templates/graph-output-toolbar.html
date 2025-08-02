@@ -1,0 +1,18 @@
+<div class="bg-secondary-subtle rounded-2 m-1 p-1">
+    <p>
+    Export BIBFRAME Works and Instances to MARC21 or MARC XML using 
+    <a href="https://github.com/lcnetdev/bibframe2marc">bibframe2marc</a>.
+    </p>
+    <div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle" 
+            type="button" data-bs-toggle="dropdown"
+            id="marc-download"
+            aria-expanded="false">
+        Download MARC
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" py-click="bf2marc" data-marc-format="marc21" href="#">MARC21</a></li>
+        <li><a class="dropdown-item" py-click="bf2marc" data-marc-format="marcXML" href="#">MARC XML</a></li>
+    </ul>
+</div>
+</div>
