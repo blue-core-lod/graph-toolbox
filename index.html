@@ -15,312 +15,159 @@
       }
     </style>
   </head>
-  <body class="container">
+    <body class="container">
     <div class="editor-navbar row">
-      <div class="col-4">
-       <img src="static/img/blue-core-v1.svg" class="float-start" alt="Blue Core Label" style="height: 100px">
-      </div>
-      <div class="col-6">
-       <h1>Graph Toolbox</h1>
-       <h4>Version <span id="version" ></span></h4>
-      </div>
-      <div class="col-2">
-        <button class="btn btn-primary mt-1"  
-          data-bs-toggle="modal" data-bs-target="#loginModal">
-           <span id="login-action">
-            <i class="bi bi-box-arrow-in-right"></i>
-           </span>
-        </button>
-      </div>
+    <div class="col-4">
+    <img src="static/img/blue-core-v1.svg" class="float-start" alt="Blue Core Label" style="height: 100px">
     </div>
-    <!-- <div class="float-end sticky-top" style="background-color: rgb(255,255,255)">
-      <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#graph-repl-modal">
-        <img width="64" alt="Python-logo-notext" src="./static/img/python-repl.svg">         
-      </button>
-    </div> -->
+    <div class="col-6">
+    <h1>Graph Toolbox</h1>
+    <h4>Version <span id="version" ></span></h4>
+    </div>
+    <div class="col-2">
+    <span id="user-name">test</span>
+    <button class="btn btn-primary mt-1"  
+        data-bs-toggle="modal" data-bs-target="#loginModal">
+        <span id="login-action">
+        <i class="bi bi-box-arrow-in-right"></i>
+        </span>
+    </button>
+    </div>
+</div>
     <div class="row bg-secondary-subtle rounded-2">
-      <div class="col-2 d-flex flex-grow-1 justify-content-center align-items-center">
-        <h5>Graph Summary</h5>
-      </div>
-      <div class="col-6 d-flex flex-grow-1 justify-content-center align-items-center">
-        <div class="btn-group" role="group" aria-label="Basic example">
-          <button type="button" class="btn btn-success" py-click="run_summary_query" data-query="all">Total Triples
-            <span class="badge text-bg-secondary" id="total-triples">0</span>
-          </button>
-          <button type="button" class="btn btn-info" py-click="run_summary_query" data-query="subject">
-            Subjects
-            <span class="badge text-bg-secondary" id="subjects-count">0</span>
-          </button>
-          <button type="button" class="btn btn-primary" py-click="run_summary_query" data-query="predicate">
-            Predicates
-            <span class="badge text-bg-secondary" id="predicates-count">0</span>
-          </button>
-          <button type="button" class="btn btn-info" py-click="run_summary_query" data-query="object">
-            Objects
-            <span class="badge text-bg-secondary" id="objects-count">0</span>
-          </button>
+    <div class="col-2 d-flex flex-grow-1 justify-content-center align-items-center">
+    <h5>Graph Summary</h5>
+    </div>
+    <div class="col-6 d-flex flex-grow-1 justify-content-center align-items-center">
+    <div class="btn-group" role="group" aria-label="Basic example">
+        <button type="button" class="btn btn-success" py-click="run_summary_query" data-query="all">Total Triples
+        <span class="badge text-bg-secondary" id="total-triples">0</span>
+        </button>
+        <button type="button" class="btn btn-info" py-click="run_summary_query" data-query="subject">
+        Subjects
+        <span class="badge text-bg-secondary" id="subjects-count">0</span>
+        </button>
+        <button type="button" class="btn btn-primary" py-click="run_summary_query" data-query="predicate">
+        Predicates
+        <span class="badge text-bg-secondary" id="predicates-count">0</span>
+        </button>
+        <button type="button" class="btn btn-info" py-click="run_summary_query" data-query="object">
+        Objects
+        <span class="badge text-bg-secondary" id="objects-count">0</span>
+        </button>
+    </div>
+    </div>
+    <div class="col-2">
+    <ul>
+        <li>BF Works: <span class="badge text-bg-secondary" id="bf-works-count">0</span></li>
+        <li>BF Instances: <span class="badge text-bg-secondary" id="bf-instances-count">0</span></li>
+    </ul>
+    </div>
+    <div class="col-2 d-flex flex-grow-1 justify-content-center align-items-center">
+    <button type="button" class="btn btn-warning me-1" py-click="save_bluecore">
+        <i class="bi bi-floppy"></i>
+    </button>
+    <div class="dropdown">
+        <button class="btn btn-secondary dropdown-toggle" 
+                type="button" 
+                data-bs-toggle="dropdown"
+                id="rdf-download-file"
+                aria-expanded="false">
+        <i class="bi bi-cloud-download"></i>
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="rdf-download-file">
+            <li><a py-click="download_graph" data-serialization="ttl" class="dropdown-item" href="#">Turtle (.ttl)</a></li>
+            <li><a class="dropdown-item" py-click="download_graph" data-serialization="xml" href="#">XML (.rdf)</a></li>
+            <li><a class="dropdown-item" py-click="download_graph" data-serialization="json-ld" href="#">JSON-LD (.json)</a></li>
+            <li><a class="dropdown-item" py-click="download_graph" data-serialization="nt" href="#">N3 (.nt)</a></li>
+        </ul>
+    </div>
+    </div>
+</div>
+    <div class="row">
+      <div class="col-2">
+      <div class="bg-secondary-subtle rounded-2">
+
+<div class="m-1">
+    <h4>AI Assisted Search</h4>
+    <div class="form-text">
+        Use an AI Search Agent to find resources in <a href="https://bcld.info">Blue Core</a>,
+        <a href="https://sinopia.io">Sinopia</a>, or <a href="https://id.loc.gov/">id.loc.gov</a>.
+    </div>
+    <textarea class="form-control" id="ai-search-resources"></textarea>
+</div>
+<hr>
+<div class="m-1">
+    <h4>Individual Resources</h4>
+    <p class="form-text">Add URLs of Individual Resources to add to Graph (separate by commas)</p>
+    <div>
+    <textarea class="form-control" cols=25 rows=10 id="resource-urls"></textarea>
+    </div>
+</div>
+<hr>
+<h4>Constrained Bound Descriptions (CBD)</h4>
+<div>
+<label for="cbd-file" class="form-label">Upload CBD file</label>
+<div class="input-group">
+    <input class="form-control" type="file" id="cbd-file">
+    <button class="btn btn-outline-secondary" type="button" id="cbd-file-btn" py-click="load_cbd_file">Load</button>
+</div>
+</div>
+<hr>
+<div class="m-1">
+    <p>
+    Upload a MARC21 or MARC XML file and convert to BIBFRAME
+    using <a href="https://github.com/lcnetdev/marc2bibframe2">marc2bibframe2</a>.
+    </p>
+    <div class="mb-3">
+        <label for="marc-file" class="form-label">Upload MARC file</label>
+        <div class="input-group">
+            <input class="form-control" type="file" id="marc-file">
+            <button class="btn btn-outline-secondary" type="button" id="marc-file-btn" py-click="marc2bf">Convert</button>
         </div>
+    </div>
+</div>
+</div>
+      </div>
+      <div class="col-8">
+      <div class="h-100 border rounded bg-light border-secondary-subtle m-1">
+  <h2>Loading...</h2>
+  <div id="bf-sparql-results"></div>
+</div>
       </div>
       <div class="col-2">
-        <ul>
-          <li>BF Works: <span class="badge text-bg-secondary" id="bf-works-count">0</span></li>
-          <li>BF Instances: <span class="badge text-bg-secondary" id="bf-instances-count">0</span></li>
-        </ul>
-      </div>
-      <div class="col-2 d-flex flex-grow-1 justify-content-center align-items-center">
-        <button type="button" class="btn btn-warning me-1" py-click="save_bluecore">
-          <i class="bi bi-floppy"></i>
-        </button>
-        <div class="dropdown">
-          <button class="btn btn-secondary dropdown-toggle" 
-                  type="button" 
-                  data-bs-toggle="dropdown"
-                  id="rdf-download-file"
-                  aria-expanded="false">
-            <i class="bi bi-cloud-download"></i>
-          </button>
-          <ul class="dropdown-menu" aria-labelledby="rdf-download-file">
-              <li><a py-click="download_graph" data-serialization="ttl" class="dropdown-item" href="#">Turtle (.ttl)</a></li>
-              <li><a class="dropdown-item" py-click="download_graph" data-serialization="xml" href="#">XML (.rdf)</a></li>
-              <li><a class="dropdown-item" py-click="download_graph" data-serialization="json-ld" href="#">JSON-LD (.json)</a></li>
-              <li><a class="dropdown-item" py-click="download_graph" data-serialization="nt" href="#">N3 (.nt)</a></li>
-          </ul>
-        </div>
-      </div>
-    </div>
-    <br>
-    <ul class="nav nav-tabs" id="toolkitTab" role="tablist">
-      <li class="nav-item me-1" role="presentation">
-        <button class="nav-link active" 
-                id="home-tab" 
-                data-bs-toggle="tab" 
-                data-bs-target="#load" 
-                type="button" 
-                role="tab" 
-                aria-controls="home" 
-                aria-selected="true">Find &amp; Load RDF</button>
-      </li>
-      <li class="nav-item me-1" role="presentation">
-        <button class="nav-link" 
-                id="contact-tab" 
-                data-bs-toggle="tab" 
-                data-bs-target="#sparql" 
-                type="button" 
-                role="tab" 
-                aria-controls="contact" 
-                aria-selected="false">SPARQL Editor</button>
-      </li>
-      <li class="nav-item me-1" role="presentation">
-        <button class="nav-link" 
-                id="batch-tab" 
-                data-bs-toggle="tab" 
-                data-bs-target="#batch" 
-                type="button" 
-                role="tab" 
-                aria-controls="contact" 
-                aria-selected="false">Batches</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" 
-                id="marc-tab" 
-                data-bs-toggle="tab" 
-                data-bs-target="#marc" 
-                type="button" 
-                role="tab" 
-                aria-controls="contact" 
-                aria-selected="false">MARC import/export</button>
-      </li>
+       <div class="bg-secondary-subtle rounded-2 m-1 p-1">
+    <p>
+    Export BIBFRAME Works and Instances to MARC21 or MARC XML using 
+    <a href="https://github.com/lcnetdev/bibframe2marc">bibframe2marc</a>.
+    </p>
+    <div class="dropdown">
+    <button class="btn btn-secondary dropdown-toggle" 
+            type="button" data-bs-toggle="dropdown"
+            id="marc-download"
+            aria-expanded="false">
+        Download MARC
+    </button>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" py-click="bf2marc" data-marc-format="marc21" href="#">MARC21</a></li>
+        <li><a class="dropdown-item" py-click="bf2marc" data-marc-format="marcXML" href="#">MARC XML</a></li>
     </ul>
-    <div class="tab-content" id="myTabContent">
-      <div class="tab-pane fade show active" id="load" role="tabpanel" aria-labelledby="home-tab">
-         <div class="container">
-           <div class="row">
-              <div class="col">
-                <h4>AI Assisted Search</h4>
-                <div class="form-text">
-                  Use an AI Search Agent to find resources in <a href="https://bcld.info">Blue Core</a>,
-                  <a href="https://sinopia.io">Sinopia</a>, or <a href="https://id.loc.gov/">id.loc.gov</a>.
-                </div>
-                <textarea class="form-control" id="ai-search-resources"></textarea>
-              </div>
-              <div class="col">
-                 <h4>Individual Resources</h4>
-                 <p class="form-text">Add URLs of Individual Resources to add to Graph (separate by commas)</p>
-                 <div>
-                   <textarea class="form-control" cols=25 rows=10 id="resource-urls"></textarea>
-                 </div>
-                 <hr>
-                 <h4>Constrained Bound Descriptions (CBD)</h4>
-                 <div>
-                    <label for="cbd-file" class="form-label">Upload CBD file</label>
-                    <div class="input-group">
-                      <input class="form-control" type="file" id="cbd-file">
-                      <button class="btn btn-outline-secondary" type="button" id="cbd-file-btn" py-click="load_cbd_file">Load</button>
-                    </div>
-                  </div>
-              </div>
-           </div>
-           <div class="row">
-              <div class="col">
-                <div class="btn-group" role="group" aria-label="Basic Actions">
-                  <button class="btn btn-primary btn-lg" py-click="build_graph">
-                     <i class="spinner-border d-none" id="graph-loading-status"></i>
-                     Build Graph
-                  </button>
-                </div>
-              </div>
-           </div>
-         </div>
-      </div>
-      <div class="tab-pane fade" id="sparql" role="tabpanel" aria-labelledby="contact-tab">
-        <div class="container">
-          <div id="sparql-summary">
-            <h2>SPARQL</h2>
-          </div>
-          <div class="row">
-            <div class="col">
-              <label for="ai-sparql-help">AI Assistance</label>
-              <div class="form-text">
-                Get help constructing SPARQL queries to apply to the loaded graph
-              </div>
-              <textarea class="form-control" id="ai-sparql-help"></textarea>
-              <div id="bf-sparql-query"></div>
-            </div>
-            <div class="col">
-              <div id="bf-sparql-results"></div>
-            </div>
-          </div>
-          <div id="err-div" class="bg-red text-blue text-center border-t-4"></div>
-              <script type="py" id="repl" terminal worker>
-               import code
-
-               code.interact()
-              </script>
-          <div id="output" class="p-4"></div>
-        </div>
-       </div>
-       <div class="tab-pane fade" id="batch" role="tabpanel" aria-labelledby="batch-tab">
-        <div class="container">
-          <h2>Batch Management</h2>
-          <div class="row">
-            <div class="col">
-              <div class="mb-3">
-                <label for="cbd-file" class="form-label">Upload CBD file</label>
-                <div class="input-group">
-                  <input class="form-control" type="file" id="cbd-file">
-                  <button class="btn btn-outline-secondary" type="button" id="cbd-file-btn" py-click="load_cbd_file">Load</button>
-                </div>
-              </div>
-              <div class="input-group mb-3">
-                <input type="text" id="cbd-url" class="form-control" placeholder="Load CBD URL" 
-                 aria-label="Load CBD URL" aria-describedby="cbd-url-btn">
-                <button class="btn btn-outline-secondary" type="button" id="cbd-url-btn">Load</button>
-              </div>
-            </div>
-            <div class="col">
-              <div class="mb-3">
-                <label for="cbd-zip-file" class="form-label">Upload Multiple CBD records in a Zip File</label>
-                <input class="form-control" type="file" id="cbd-zip-file">
-              </div>
-            </div>
-          </div>
-          <h3>Bulk Updates</h3>
-          <div class="row">
-            <div class="col">
-               <label for="select-sparql" class="form-label">Select SPARQL</label>
-               <textarea cols="30" rows="10" id="select-sparql" class="form-control"></textarea>
-            </div>
-            <div class="col">
-              <div class="mb-3">
-                <label for="update-sparql" class="form-label">Update SPARQL</label>
-                <textarea cols="30" rows="10" id="update-sparql" class="form-control"></textarea>
-              </div>
-            </div>
-          </div>
-          <div class="row align-items-center">
-            <div class="col-md-4 offset-md-5">
-                <button class="btn btn-warning btn-lg">Run Bulk Update</button>
-            </div>
-          </div>
-        </div>
-       </div>
-       <div class="tab-pane fade" id="marc" role="tabpanel" aria-labelledby="batch-tab">
-        <div class="container">
-          <h2>MARC Import &amp; Export</h2>
-          <div class="row">
-            <div class="col">
-             <p>
-              Upload a MARC21 or MARC XML file and convert to BIBFRAME
-              using <a href="https://github.com/lcnetdev/marc2bibframe2">marc2bibframe2</a>.
-             </p>
-             <div class="mb-3">
-              <label for="marc-file" class="form-label">Upload MARC file</label>
-              <div class="input-group">
-                <input class="form-control" type="file" id="marc-file">
-                <button class="btn btn-outline-secondary" type="button" id="marc-file-btn" py-click="marc2bf">Convert</button>
-              </div>
-              </div>
-            </div>
-            <div class="col">
-              <p>
-               Export BIBFRAME Works and Instances to MARC21 or MARC XML using 
-               <a href="https://github.com/lcnetdev/bibframe2marc">bibframe2marc</a>.
-              </p>
-              <div class="dropdown">
-                <button class="btn btn-secondary dropdown-toggle" 
-                        type="button" data-bs-toggle="dropdown"
-                        id="marc-download"
-                        aria-expanded="false">
-                  Download MARC
-                </button>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" py-click="bf2marc" data-marc-format="marc21" href="#">MARC21</a></li>
-                  <li><a class="dropdown-item" py-click="bf2marc" data-marc-format="marcXML" href="#">MARC XML</a></li>
-                </ul>
-              </div>
-            </div>
-          </div>      
-        </div>
-       </div>
-    </div>
- 
-    <footer>
-      <p xmlns:cc="http://creativecommons.org/ns#" >
-        Version <span id="footer-version"></span>. Documentation is licensed under 
-        <a href="http://creativecommons.org/licenses/by/4.0/?ref=chooser-v1" 
-           target="_blank" 
-           rel="license noopener noreferrer" style="display:inline-block;">Creative Commons Attribution 4.0 International</a>.
-        Source code licensed under <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2</a> and available 
-        at <a href="https://github.com/blue-core-lod/graph-explorer">https://github.com/blue-core-lod/graph-explorer</a>
-     </p> 
-    </footer>
- 
-    <div class="modal fade" id="graph-repl-modal" tabindex="-1" aria-labelledby="graph-repl-modal-title" style="display: none;" aria-hidden="true">
-      <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="graph-repl-modal-title">Graph Explorer - Python REPL</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="sticky-top py-3 bg-light">
-              <div id="err-div" class="bg-red text-blue text-center border-t-4"></div>
-              <script type="py" id="repl" terminal worker>
-               import code
-
-               code.interact()
-              </script>
-              <div id="output" class="p-4"></div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          </div>
-        </div>
+</div>
+</div>
       </div>
     </div>
-
-<!-- Load modal -->
+     
+      <footer>
+    <p xmlns:cc="http://creativecommons.org/ns#" >
+    Version <span id="footer-version"></span>. Documentation is licensed under 
+    <a href="http://creativecommons.org/licenses/by/4.0/?ref=chooser-v1" 
+        target="_blank" 
+        rel="license noopener noreferrer" style="display:inline-block;">Creative Commons Attribution 4.0 International</a>.
+    Source code licensed under <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2</a> and available 
+    at <a href="https://github.com/blue-core-lod/graph-explorer">https://github.com/blue-core-lod/graph-explorer</a>
+    </p> 
+</footer>
+     <!-- Load modal -->
  <div class="modal fade" tabindex="-1" id="splashModal">
   <div class="modal-dialog modal-fullscreen-sm-down">
     <div class="modal-content">
@@ -337,8 +184,7 @@
     </div>
   </div>
 </div>
-
-<!-- Login modal -->
+     <!-- Login modal -->
  <div class="modal fade" tabindex="-1" id="loginModal">
   <div class="modal-dialog modal-fullscreen-sm-down">
     <div class="modal-content">
@@ -379,8 +225,6 @@
     </div>
   </div>
  </div>
-
-
-  <script type="py" src="./main.py" config="./pyconfig.json"></script>
-  </body>
+    <script type="py" src="./main.py" config="./pyconfig.json"></script>
+    </body>
 </html>

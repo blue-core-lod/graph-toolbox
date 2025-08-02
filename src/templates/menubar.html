@@ -1,0 +1,57 @@
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Graph Toolbox <span id="bluecore-env-label"></span></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Blue Core
+          </a>
+          <ul class="dropdown-menu">
+            <li>
+                <a class="dropdown-item" href="#" py-click="save_bluecore"><i class="bi bi-floppy"></i> Save</a>
+                </li>
+            <li>
+                <a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#bulk-modal" href="#"><i class="bi bi-files"></i> Bulk Updates</a>
+            </li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Import
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#urls-modal"><i class="bi bi-window-stack"></i> Individual URLs</a></li>
+            <li><a class="dropdown-item" href="#"  data-bs-toggle="modal" data-bs-target="#cbd-modal"><i class="bi bi-box-seam"></i> Constrained Bound Descriptions (CBDs)</a></li>
+            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#marc21-import-modal">
+                <img src="static/img/marc21h2.gif" width="16px" height="16px"></img> MARC Record</a></li>
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Export
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#marc21-export-modal"><img src="static/img/marc21h2.gif" width="16px" height="16px"> MARC Record</a></li>
+            <li><a class="dropdown-item" py-click="download_graph" data-serialization="ttl">Turtle (.ttl)</a></li>
+            <li><a class="dropdown-item" href="#" py-click="download_graph" data-serialization="xml"><i class="bi bi-filetype-xml"></i> RDF XML</a></li>
+            <li><a class="dropdown-item" href="#" py-click="download_graph" data-serialization="json-ld"><i class="bi bi-filetype-json"></i> JSON-LD</a></li>
+            <li><a class="dropdown-item" href="#" py-click="download_graph" data-serialization="nt">N3 (.nt)</a></li>
+          </ul>
+        </li>
+      </ul>
+      <div class="d-flex" role="user-mgt">
+        <span id="user-name" class="m-2">not logged in</span>
+        <button class="btn btn-primary mt-1"  
+            data-bs-toggle="modal" data-bs-target="#loginModal">
+            <span id="login-action">
+            <i class="bi bi-box-arrow-in-right"></i>
+            </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,23 @@
+<div class="bg-secondary-subtle rounded-2 m-1 d-grid">
+
+<div class="m-1">
+    <h4>AI Assistance <button class="btn float-end" data-bs-toggle="modal" data-bs-target="#ai-assistance-modal"><i class="bi bi-arrows-fullscreen"></i></button></h4>
+    <ul>
+        <li>
+        Use an AI Search Agent to find resources in <a href="https://bcld.info">Blue Core</a>,
+        <a href="https://sinopia.io">Sinopia</a>, or <a href="https://id.loc.gov/">id.loc.gov</a>.
+        </li>
+        <li>
+        Get help constructing SPARQL queries to apply to the loaded graph 
+        </li>
+    </ul>
+    <textarea class="form-control" id="ai-search-resources" rows=10></textarea>
+    <button id="sparql-chat" class="btn btn-success m-1 d-block mx-auto" onclick="alert('Coming soon!')"><i class="bi bi-chat-left-dots"></i> Chat</button>
+</div>
+</div>
+
+<div class="bg-secondary-subtle rounded-2 m-3 p-1">
+    <h4>SPARQL Query <button class="btn float-end" data-bs-toggle="modal" data-bs-target="#sparql-modal"><i class="bi bi-arrows-fullscreen"></i></button></h4>
+    <textarea class="form-control" id="bf-sparql-query" rows="10"></textarea>
+    <button class="btn btn-primary m-1 d-block mx-auto" py-click="run_query" id="run-query-btn"><i class="bi bi-search"></i> Run query</button>
+</div>
