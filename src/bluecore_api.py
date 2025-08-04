@@ -17,6 +17,7 @@ async def _get_keycloak_token():
     username = document.getElementById("user-name")
     bluecore_env_label = document.getElementById("bluecore-env-label")
     bluecore_env_radio = document.getElementsByName("bluecore_env")
+    env_label = ""
     for radio_input in bluecore_env_radio:
         if radio_input.checked:
             BLUECORE_ENV = radio_input.value
@@ -67,6 +68,8 @@ async def save_bluecore(event):
                               "upload",
                               { "type": "text/plain"})
     form_data.append('file', bf_upload_file)
+    bench_heading = document.getElementById("bench-heading")
+    bench_bc_result = document.getElementById("bc-results")
     batch_result = await pyfetch(
         f"{BLUECORE_ENV}/api/batches/upload/",
         method="POST",
@@ -76,4 +79,12 @@ async def save_bluecore(event):
         body=form_data
     )
     if batch_result.ok:
-        console.log(f"Saved graph")
+        bench_heading.innerHTML = "Saving Graph to Blue Core API"
+        batch_message = await batch_result.json()
+        console.log(f"Saved graph", batch_message.keys())
+        workflow_uri = f"{BLUECORE_ENV}/workflows/dags/resource_loader/runs/{batch_message.get('workflow_id')}"
+        bench_bc_result.innerHTML = f"""Workflow at <a href="{workflow_uri}" target="_blank">{workflow_uri}</a>"""
+    else:
+        bench_heading.innerHTML = """<span class="text-danger">ERROR!!</span>"""
+        bench_bc_result.innerHTML = await batch_result.text
+
