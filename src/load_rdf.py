@@ -123,16 +123,7 @@ def summarize_graph(graph: rdflib.Graph):
     
 
 sparql_template = Template(
-    """<div class="mb-3">
-    <label for="bf-sparql-queries" class="form-label">SPARQL Query</label>
-    <textarea class="form-control" id="bf-sparql-queries" rows="10">
-{% for ns in namespaces %}PREFIX {{ ns[0] }}: <{{ ns[1] }}>\n{% endfor %}
-    </textarea>
-  </div>
-  <div class="mb-3">
-    <button class="btn btn-primary" py-click="run_query" id="run-query-btn">Run query</button>
-  </div>
-</div>"""
+    """{% for ns in namespaces %}PREFIX {{ ns[0] }}: <{{ ns[1] }}>\n{% endfor %}"""
 )
 
 
@@ -146,9 +137,11 @@ async def load_cbd_file(event):
     global BF_GRAPH
 
     cbd_file_input = js.document.getElementById("cbd-file")
+    cbd_file_modal_close_btn = js.document.getElementById("cbd-modal-close-btn")
     if cbd_file_input.files.length > 0:
         cbd_file = cbd_file_input.files.item(0)
         rdf_type = rdflib.util.guess_format(cbd_file_input.value)
         raw_rdf = await cbd_file.text()
         BF_GRAPH.parse(data=raw_rdf, format=rdf_type)
         summarize_graph(BF_GRAPH)
+        cbd_file_modal_close_btn.click()
