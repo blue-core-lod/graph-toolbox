@@ -5,14 +5,15 @@ import js
 import pandas as pd
 
 import helpers
+
+from load_rdf import bibframe_sparql
 from state import RESULTS_DF, BF_GRAPH
 
 
 from jinja2 import Template
 
 query_results_template = Template(
-    """
-<h2>Query Results {{count}} Rows</h2>
+    """<div class="w-100">
  <div>
   <div class="dropdown">
     <button class="btn btn-secondary dropdown-toggle" 
@@ -45,7 +46,8 @@ query_results_template = Template(
      </tr> 
     {% endfor %}                        
   </tbody>
-</table>             
+</table>
+</div>           
 """
 )
 
@@ -79,7 +81,8 @@ async def run_query(*args):
     global RESULTS_DF
     global BF_GRAPH
 
-    query_element = js.document.getElementById("bf-sparql-queries")
+    bench_header = js.document.getElementById("bench-heading")
+    query_element = js.document.getElementById("bf-sparql-query")
     sparql_query = query_element.value
     output_element = js.document.getElementById("bf-sparql-results")
     output_element.content = ""
@@ -87,8 +90,9 @@ async def run_query(*args):
         query = BF_GRAPH.query(sparql_query)
         RESULTS_DF = pd.DataFrame(query.bindings)
         output_element.innerHTML = query_results_template.render(
-            count=f"{len(query.bindings):,}", vars=query.vars, results=query.bindings
+            vars=query.vars, results=query.bindings
         )
+        bench_header.innerHTML = f"<h2>Query Results {len(query.bindings):,} Rows</h2>"
     except Exception as e:
         output_element.content = f"""<h2>Query Error</h2><p>{e}</p>"""
 
@@ -110,11 +114,9 @@ async def run_summary_query(event):
             sparql_query = """SELECT DISTINCT ?subject WHERE { ?subject ?p ?o . }"""
 
           
-            
-    query_element = js.document.getElementById("bf-sparql-queries")
-    query_element.innerHTML = sparql_query
-    sparql_tab = js.document.querySelector('#toolkitTab button[data-bs-target="#sparql"]')
-    sparql_tab.click()
+    bibframe_sparql("bf-sparql-query")
+    query_element = js.document.getElementById("bf-sparql-query")
+    query_element.innerHTML = f"{query_element.innerHTML}\n{sparql_query}"
     run_query_btn = js.document.getElementById("run-query-btn")
     run_query_btn.click()
 

@@ -14,6 +14,8 @@ def _expires_at(seconds: int) -> str:
 async def _get_keycloak_token():
     global BLUECORE_ENV
 
+    username = document.getElementById("user-name")
+    bluecore_env_label = document.getElementById("bluecore-env-label")
     bluecore_env_radio = document.getElementsByName("bluecore_env")
     for radio_input in bluecore_env_radio:
         if radio_input.checked:
@@ -33,6 +35,8 @@ async def _get_keycloak_token():
         body=form_bytes
     )
     token_result = await token_request.json()
+    username.innerHTML = keycloak_username
+    bluecore_env_label.innerHTML = f"for {BLUECORE_ENV}"
     return token_result
     
 
@@ -42,6 +46,7 @@ async def bluecore_login(event):
     sessionStorage.setItem("keycloak_access_expires", _expires_at(tokens.get("expires_in")))
     sessionStorage.setItem("keycloak_refresh_token", tokens.get("refresh_token"))
     sessionStorage.setItem("keycloak_refresh_expires", _expires_at(tokens.get('refresh_expires_in')))
+
     close_btn = document.getElementById("loginModalhModalCloseBtn")
     close_btn.click()
 
