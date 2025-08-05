@@ -3,6 +3,7 @@ import json
 import js
 import rdflib
 
+
 from jinja2 import Template
 from pyodide.ffi import create_proxy
 from pyodide.http import pyfetch
@@ -13,7 +14,9 @@ from sinopia_api import environments
 
 def skolemize_resource(resource_url: str, raw_rdf: str) -> str:
     resource_graph = rdflib.Graph()
-    resource_graph.parse(data=json.dumps(raw_rdf), format="json-ld")
+    if not isinstance(raw_rdf, str):
+        raw_rdf = json.dumps(raw_rdf)
+    resource_graph.parse(data=raw_rdf, format="json-ld")
     #skolemize_graph = resource_graph.skolemize(basepath=f"{resource_url.strip()}#")
     #return skolemize_graph.serialize(format="turtle")
     return resource_graph.serialize(format="turtle")
@@ -25,11 +28,19 @@ async def build_graph(*args) -> rdflib.Graph:
     individual_resources = js.document.getElementById("resource-urls")
     loading_spinner = js.document.getElementById("graph-loading-status")
     loading_spinner.classList.remove("d-none")
+    bench_heading = js.document.getElementById("bench-heading")
+    bench_bc_result = js.document.getElementById("bc-results")
 
     if len(individual_resources.value) > 0:
         resources = individual_resources.value.split(",")
         for resource_url in resources:
             resource_result = await pyfetch(resource_url)
+            if not resource_result.ok:
+                bench_heading.innerHTML = """<span class="text-danger">ERROR!</span>"""
+                error = await resource_result.text()
+                bench_bc_result.innerHTML = f"Message: {error}"
+                break
+
             resource_payload = await resource_result.json()
             turtle_rdf = skolemize_resource(
                 resource_url.strip(), resource_payload["data"]
@@ -40,7 +51,24 @@ async def build_graph(*args) -> rdflib.Graph:
     return BF_GRAPH
 
 
+async def load_uri(event):
+    global BF_GRAPH
+    button = event.target
+    parent_div = button.parentElement
+    close_btn = parent_div.querySelector(".btn-close")
+    uri = button.getAttribute("data-uri")
+    rdf_data_div = js.document.getElementById(f"{uri}-rdf")
+    rdf_data = rdf_data_div.value
+    turtle_rdf = skolemize_resource(uri, rdf_data)
+    BF_GRAPH.parse(data=turtle_rdf, format="turtle")
+    summarize_graph(BF_GRAPH)
+    close_btn.click()
+
+
+
 async def download_graph(event):
+    global BF_GRAPH
+
     anchor = event.target
     serialization = anchor.getAttribute("data-serialization")
 
