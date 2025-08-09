@@ -10,6 +10,7 @@
     "./static/wheels/rdflib-7.1.4-py3-none-any.whl"
   ],
   "files": {
+    "./shacl/v0.2.0-all.ttl": "./shacl/all.ttl",
     "./src/helpers.py": "./helpers.py",
     "./src/bluecore_api.py": "./bluecore_api.py",
     "./src/load_rdf.py": "./load_rdf.py",
