@@ -3,10 +3,12 @@
     "pandas",
     "markdown",
     "Jinja2",
+    "packaging",
     "pyparsing",
     "lxml",
     "./static/wheels/isodate-0.6.1-py2.py3-none-any.whl",
     "./static/wheels/pymarc-5.3.1-py3-none-any.whl",
+    "./static/wheels/pyshacl-0.30.1-py3-none-any.whl",
     "./static/wheels/rdflib-7.1.4-py3-none-any.whl"
   ],
   "files": {
@@ -18,6 +20,7 @@
     "./src/query_rdf.py": "./query_rdf.py",
     "./src/sinopia_api.py": "./sinopia_api.py",
     "./src/state.py": "./state.py",
+    "./src/validation.py": "./validation.py",
     "./xslt/marc2bf/ConvSpec-600-662.xsl": "./marc2bf/ConvSpec-600-662.xsl",
     "./xslt/marc2bf/ConvSpec-5XX.xsl": "./marc2bf/ConvSpec-5XX.xsl",
     "./xslt/marc2bf/ConvSpec-490-510-Links.xsl": "./marc2bf/ConvSpec-490-510-Links.xsl",
