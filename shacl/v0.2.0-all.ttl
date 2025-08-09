@@ -1,0 +1,807 @@
+@prefix bf: <http://id.loc.gov/ontologies/bibframe/> .
+@prefix bflc: <http://id.loc.gov/ontologies/bflc/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<ProvisionActivityShape> a sh:NodeShape ;
+    rdfs:label "Provision Activity" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Place Simple Label" ;
+            sh:minCount 1 ;
+            sh:path bflc:simplePlace ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bf:Distribution,
+        bf:Manufacture,
+        bf:Modification,
+        bf:Production,
+        bf:ProvisionActivity,
+        bf:Publication .
+
+<big:Monograph:Instance:Electronic> a sh:NodeShape ;
+    rdfs:label "Instance (Monograph) Electronic" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Administrative metadata" ;
+            sh:minCount 1 ;
+            sh:path bf:adminMetadata ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Edition Statement" ;
+            sh:minCount 1 ;
+            sh:path bf:editionStatement ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Identifiers" ;
+            sh:minCount 1 ;
+            sh:path bf:identifiedBy ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Provision Activity--Publication Information" ;
+            sh:minCount 1 ;
+            sh:node <big:ProvisionActivity> ;
+            sh:path bf:provisionActivity ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Mode of Issuance" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:issuance ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Instance of" ;
+            sh:minCount 1 ;
+            sh:node <big:Monograph:Work> ;
+            sh:path bf:instanceOf ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Series Statement" ;
+            sh:minCount 1 ;
+            sh:path bf:seriesStatement ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Media type" ;
+            sh:minCount 1 ;
+            sh:path bf:media ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Instance Title" ;
+            sh:minCount 1 ;
+            sh:node <big:Title> ;
+            sh:path bf:title ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Uniform Resource Locator for resource" ;
+            sh:minCount 1 ;
+            sh:path bf:electronicLocator ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Digital Characteristic" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:node <big:DigitalCharacteristic> ;
+            sh:path bf:digitalCharacteristic ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Carrier type" ;
+            sh:minCount 1 ;
+            sh:path bf:carrier ;
+            sh:severity sh:Violation ] ;
+    sh:targetClass bf:Electronic .
+
+<big:Monograph:Instance:Print> a sh:NodeShape ;
+    rdfs:label "Instance (Monograph) Print" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Provision Activity--Publication Information" ;
+            sh:minCount 1 ;
+            sh:node <big:ProvisionActivity> ;
+            sh:path bf:provisionActivity ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Media type" ;
+            sh:minCount 1 ;
+            sh:path bf:media ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Mode of Issuance" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:issuance ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Instance Title" ;
+            sh:minCount 1 ;
+            sh:node <big:Title> ;
+            sh:path bf:title ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Carrier type" ;
+            sh:minCount 1 ;
+            sh:path bf:carrier ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Instance of" ;
+            sh:minCount 1 ;
+            sh:node <big:Monograph:Work> ;
+            sh:path bf:instanceOf ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Series Statement" ;
+            sh:minCount 1 ;
+            sh:path bf:seriesStatement ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Edition Statement" ;
+            sh:minCount 1 ;
+            sh:path bf:editionStatement ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Identifiers" ;
+            sh:minCount 1 ;
+            sh:path bf:identifiedBy ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Administrative metadata" ;
+            sh:minCount 1 ;
+            sh:path bf:adminMetadata ;
+            sh:severity sh:Violation ] ;
+    sh:targetClass bf:Print .
+
+<big:Serial:Instance:Electronic> a sh:NodeShape ;
+    rdfs:label "Instance (Serial) Electronic" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Instance Title" ;
+            sh:minCount 1 ;
+            sh:node <big:Title> ;
+            sh:path bf:title ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Instance of" ;
+            sh:minCount 1 ;
+            sh:node <big:Serial:Work> ;
+            sh:path bf:instanceOf ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Identifiers" ;
+            sh:minCount 1 ;
+            sh:node <big:SerialIdentifier> ;
+            sh:path bf:identifiedBy ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Series Statement" ;
+            sh:minCount 1 ;
+            sh:path bf:seriesStatement ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Publication frequency" ;
+            sh:minCount 1 ;
+            sh:node <big:PubFrequency> ;
+            sh:path bf:pubfrequency ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Provision Activity--Publication Information" ;
+            sh:minCount 1 ;
+            sh:node <big:ProvisionActivity> ;
+            sh:path bf:provisionActivity ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Uniform Resource Locator for resource" ;
+            sh:minCount 1 ;
+            sh:path bf:electronicLocator ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Administrative metadata" ;
+            sh:minCount 1 ;
+            sh:node <big:AdminMetadata> ;
+            sh:path bf:adminMetadata ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Carrier type" ;
+            sh:minCount 1 ;
+            sh:path bf:carrier ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Digital Characteristic" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:node <big:DigitalCharacteristic> ;
+            sh:path bf:digitalCharacteristic ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Media type" ;
+            sh:minCount 1 ;
+            sh:path bf:media ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Mode of Issuance" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:issuance ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Edition Statement" ;
+            sh:minCount 1 ;
+            sh:path bf:editionStatement ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bf:Electronic .
+
+<big:Serial:Instance:Print> a sh:NodeShape ;
+    rdfs:label "Instance (Serial) Print" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Identifiers" ;
+            sh:minCount 1 ;
+            sh:node <big:SerialIdentifier> ;
+            sh:path bf:identifiedBy ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Instance Title" ;
+            sh:minCount 1 ;
+            sh:node <big:Title> ;
+            sh:path bf:title ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Serial Numbering First Issue" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:firstIssue ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Publication frequency" ;
+            sh:minCount 1 ;
+            sh:node <big:PubFrequency> ;
+            sh:path bf:pubfrequency ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Publication Frequency" ;
+            sh:minCount 1 ;
+            sh:node <big:PubFrequencyShape> ;
+            sh:path bf:pubFrequency ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Administrative metadata" ;
+            sh:minCount 1 ;
+            sh:node <big:AdminMetadata> ;
+            sh:path bf:adminMetadata ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Instance of" ;
+            sh:minCount 1 ;
+            sh:node <big:Serial:Work> ;
+            sh:path bf:instanceOf ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Provision Activity--Publication Information" ;
+            sh:minCount 1 ;
+            sh:node <big:ProvisionActivity> ;
+            sh:path bf:provisionActivity ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Mode of Issuance" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:issuance ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Media type" ;
+            sh:minCount 1 ;
+            sh:path bf:media ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Edition Statement" ;
+            sh:minCount 1 ;
+            sh:path bf:editionStatement ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Frequency" ;
+            sh:minCount 1 ;
+            sh:node <big:FrequencyShape> ;
+            sh:path bf:frequency ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Carrier type" ;
+            sh:minCount 1 ;
+            sh:path bf:carrier ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Series Statement" ;
+            sh:minCount 1 ;
+            sh:path bf:seriesStatement ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bf:Print .
+
+<big:FrequencyShape> a sh:NodeShape ;
+    rdfs:label "Frequency" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Frequency" ;
+            sh:minCount 1 ;
+            sh:path rdfs:label ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Frequency" ;
+            sh:minCount 1 ;
+            sh:path rdfs:label ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bf:Frequency .
+
+<big:PubFrequencyShape> a sh:NodeShape ;
+    rdfs:label "Frequency" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Publication Frequency" ;
+            sh:minCount 1 ;
+            sh:path bf:frequency ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Publication Frequency" ;
+            sh:minCount 1 ;
+            sh:path bf:frequency ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bf:PubFrequency .
+
+<big:AdminMetadata> a sh:NodeShape ;
+    rdfs:label "Admin Metadata" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Cataloging institution" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:assigner ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Date Cataloged or Updated/Changed" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:creationDate ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Date Cataloged or Updated/Changed" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:creationDate ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Cataloging institution" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:assigner ;
+            sh:severity sh:Violation ] ;
+    sh:targetClass bf:AdminMetadata .
+
+<big:Contribution> a sh:NodeShape ;
+    rdfs:label "Contribution" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Agent" ;
+            sh:minCount 1 ;
+            sh:node <big:Agent> ;
+            sh:path bf:agent ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Agent" ;
+            sh:minCount 1 ;
+            sh:node <big:Agent> ;
+            sh:path bf:agent ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Role" ;
+            sh:minCount 1 ;
+            sh:node <big:Role> ;
+            sh:path bf:role ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Role" ;
+            sh:minCount 1 ;
+            sh:node <big:Role> ;
+            sh:path bf:role ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bf:Contribution,
+        bf:PrimaryContribution .
+
+<big:DigitalCharacteristic> a sh:NodeShape ;
+    rdfs:label "Digital Characteristic" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "File Type" ;
+            sh:minCount 1 ;
+            sh:path bf:digitalCharacteristic ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Encoding Format" ;
+            sh:minCount 1 ;
+            sh:path bf:digitalCharacteristic ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "File Type" ;
+            sh:minCount 1 ;
+            sh:path bf:digitalCharacteristic ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Encoding Format" ;
+            sh:minCount 1 ;
+            sh:path bf:digitalCharacteristic ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bf:EncodingFormat,
+        bf:FileType .
+
+<big:Monograph:Work> a sh:NodeShape ;
+    rdfs:label "Work (Monograph) Text" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Subject of the Work" ;
+            sh:minCount 1 ;
+            sh:path bf:subject ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Content Type" ;
+            sh:minCount 1 ;
+            sh:path bf:content ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Date of Work" ;
+            sh:minCount 1 ;
+            sh:path bf:originDate ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Form/Genre of Work" ;
+            sh:minCount 1 ;
+            sh:path bf:genreForm ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Contribution" ;
+            sh:minCount 1 ;
+            sh:node <big:Contribution> ;
+            sh:path bf:contribution ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Classification numbers" ;
+            sh:minCount 1 ;
+            sh:path bf:classification ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Administrative metadata" ;
+            sh:minCount 1 ;
+            sh:path bf:adminMetadata ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Place of Origin of the Work" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:originPlace ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Language" ;
+            sh:minCount 1 ;
+            sh:path bf:language ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Work Title" ;
+            sh:minCount 1 ;
+            sh:node <big:Title> ;
+            sh:path bf:title ;
+            sh:severity sh:Violation ] ;
+    sh:targetClass bf:Monograph,
+        bf:Text .
+
+<big:Role> a sh:NodeShape ;
+    rdfs:label "Role" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Role Label" ;
+            sh:minCount 1 ;
+            sh:path rdfs:label ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Role" ;
+            sh:minCount 1 ;
+            sh:path rdfs:label ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bf:Role .
+
+<big:Serial:Work> a sh:NodeShape ;
+    rdfs:label "Work (Serial) Text" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Identifier" ;
+            sh:minCount 1 ;
+            sh:node <big:SerialIdentifier> ;
+            sh:path bf:identifiedBy ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Administrative metadata" ;
+            sh:minCount 1 ;
+            sh:path bf:adminMetadata ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Content Type" ;
+            sh:minCount 1 ;
+            sh:path bf:content ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Place of Origin of the Work" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:originPlace ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Subject of the Work" ;
+            sh:minCount 1 ;
+            sh:path bf:subject ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Date of Work" ;
+            sh:minCount 1 ;
+            sh:path bf:originDate ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Contribution" ;
+            sh:minCount 1 ;
+            sh:node <big:Contribution> ;
+            sh:path bf:contribution ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Language" ;
+            sh:minCount 1 ;
+            sh:path bf:language ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Work Title" ;
+            sh:minCount 1 ;
+            sh:node <big:Title> ;
+            sh:path bf:title ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Classification numbers" ;
+            sh:minCount 1 ;
+            sh:path bf:classification ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bf:Serial,
+        bf:Text .
+
+<big:SerialIdentifier> a sh:NodeShape ;
+    rdfs:label "Identifier" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Serial Identifier" ;
+            sh:minCount 1 ;
+            sh:path rdf:value ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Serial Identifier" ;
+            sh:minCount 1 ;
+            sh:path rdf:value ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Serial Identifier" ;
+            sh:minCount 1 ;
+            sh:path rdf:value ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bf:Issn,
+        bf:IssnL .
+
+<big:Place> a sh:NodeShape ;
+    rdfs:label "None" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Place Label" ;
+            sh:minCount 1 ;
+            sh:path rdfs:label ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Place Label" ;
+            sh:minCount 1 ;
+            sh:path rdfs:label ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Place Label" ;
+            sh:minCount 1 ;
+            sh:path rdfs:label ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Place Label" ;
+            sh:minCount 1 ;
+            sh:path rdfs:label ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bf:Place .
+
+<big:ProvisionActivity> a sh:NodeShape ;
+    rdfs:label "Provision Activity" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Place" ;
+            sh:minCount 1 ;
+            sh:node <big:Place> ;
+            sh:path bf:place ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Date" ;
+            sh:minCount 1 ;
+            sh:path bf:date ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Agent Simple Label" ;
+            sh:minCount 1 ;
+            sh:path bflc:simpleAgent ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Date" ;
+            sh:minCount 1 ;
+            sh:path bf:date ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Agent Simple Label" ;
+            sh:minCount 1 ;
+            sh:path bflc:simpleAgent ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Simple Date" ;
+            sh:minCount 1 ;
+            sh:path bflc:simpleDate ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Place Simple Label" ;
+            sh:minCount 1 ;
+            sh:path bflc:simplePlace ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Simple Date" ;
+            sh:minCount 1 ;
+            sh:path bflc:simpleDate ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Date" ;
+            sh:minCount 1 ;
+            sh:path bf:date ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Date" ;
+            sh:minCount 1 ;
+            sh:path bf:date ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Agent" ;
+            sh:minCount 1 ;
+            sh:node <big:Agent> ;
+            sh:path bf:agent ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Place" ;
+            sh:minCount 1 ;
+            sh:node <big:Place> ;
+            sh:path bf:place ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Agent Simple Label" ;
+            sh:minCount 1 ;
+            sh:path bflc:simpleAgent ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Place Simple Label" ;
+            sh:minCount 1 ;
+            sh:path bflc:simplePlace ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Agent Simple Label" ;
+            sh:minCount 1 ;
+            sh:node <big:Agent> ;
+            sh:path bflc:simpleAgent ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Agent" ;
+            sh:minCount 1 ;
+            sh:node <big:Agent> ;
+            sh:path bf:agent ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Simple Date" ;
+            sh:minCount 1 ;
+            sh:path bflc:simpleDate ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Simple Date" ;
+            sh:minCount 1 ;
+            sh:path bflc:simpleDate ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Place" ;
+            sh:minCount 1 ;
+            sh:node <big:Place> ;
+            sh:path bf:place ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Place" ;
+            sh:minCount 1 ;
+            sh:node <big:Place> ;
+            sh:path bf:place ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Agent" ;
+            sh:minCount 1 ;
+            sh:node <big:AgentShape> ;
+            sh:path bf:agent ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Place Simple Label" ;
+            sh:minCount 1 ;
+            sh:path bflc:simplePlace ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Agent" ;
+            sh:minCount 1 ;
+            sh:node <big:Agent> ;
+            sh:path bf:agent ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bf:Distribution,
+        bf:Manufacture,
+        bf:Modification,
+        bf:Production,
+        bf:ProvisionActivity,
+        bf:Publication .
+
+<big:Agent> a sh:NodeShape ;
+    rdfs:label "None" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Agent Label" ;
+            sh:minCount 1 ;
+            sh:path rdfs:label ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Agent Label" ;
+            sh:minCount 1 ;
+            sh:path rdfs:label ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Agent Label" ;
+            sh:minCount 1 ;
+            sh:path rdfs:label ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Agent Label" ;
+            sh:minCount 1 ;
+            sh:path rdfs:label ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Agent Label" ;
+            sh:minCount 1 ;
+            sh:path rdfs:label ;
+            sh:severity sh:Warning ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Agent Label" ;
+            sh:minCount 1 ;
+            sh:path rdfs:label ;
+            sh:severity sh:Warning ] ;
+    sh:targetClass bf:Agent,
+        bf:Family,
+        bf:Jurisdiction,
+        bf:Meeting,
+        bf:Organization,
+        bf:Person .
+
+<big:Title> a sh:NodeShape ;
+    rdfs:label "Instance Title" ;
+    sh:property [ a sh:PropertyShape ;
+            rdfs:label "Main Title" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:mainTitle ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Main Title" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:mainTitle ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Main Title" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:mainTitle ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Main Title" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:mainTitle ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Main Title" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:mainTitle ;
+            sh:severity sh:Violation ],
+        [ a sh:PropertyShape ;
+            rdfs:label "Main Title" ;
+            sh:maxCount 1 ;
+            sh:minCount 1 ;
+            sh:path bf:mainTitle ;
+            sh:severity sh:Violation ] ;
+    sh:targetClass bf:Title .
