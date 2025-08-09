@@ -9,6 +9,7 @@ from pyodide.ffi import create_proxy
 from pyodide.http import pyfetch
 
 import helpers
+import validation
 
 import rdflib
 
