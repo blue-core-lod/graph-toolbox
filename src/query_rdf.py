@@ -84,7 +84,11 @@ async def run_query(*args):
     bench_header = js.document.getElementById("bench-heading")
     query_element = js.document.getElementById("bf-sparql-query")
     sparql_query = query_element.value
+    tab = js.document.getElementById("bf-sparql-results-tab")
+    tab.classList.remove("d-none")
     output_element = js.document.getElementById("bf-sparql-results")
+    for class_ in ["active", "show"]:
+        output_element.classList.add(class_)
     output_element.content = ""
     try:
         query = BF_GRAPH.query(sparql_query)

@@ -9,7 +9,6 @@ from pyodide.ffi import create_proxy
 from pyodide.http import pyfetch
 
 import helpers
-import validation
 
 import rdflib
 
@@ -23,6 +22,7 @@ from sinopia_api import show_groups
 from load_rdf import bibframe_sparql as bf_sparql_widget, build_graph, download_graph, load_cbd_file, load_uri
 from marc import bf2marc, marc2bf
 from query_rdf import download_query_results, run_query, run_summary_query
+from validation import validate
 
 bf_sparql_widget("bf-sparql-query")
 
