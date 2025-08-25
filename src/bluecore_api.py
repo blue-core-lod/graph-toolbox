@@ -125,7 +125,11 @@ async def search_bluecore(event):
 
     query_elem = document.getElementById("ai-search-resources")
     bench_heading = document.getElementById("bench-heading")
-    bench_bc_results = document.getElementById("bc-results")
+    search_results_tab = document.getElementById("search-results-tab")
+    search_results_tab.classList.remove("d-none")
+    bench_bc_results = document.getElementById("search-results")
+    for class_ in ["active", "show"]:
+        bench_bc_results.classList.add(class_)
     bench_bc_results.innerHTML = ""
     search_url = f"{BLUECORE_ENV}/api/search?" + urlencode({ "q": query_elem.value })
     search_result = await pyfetch(search_url)
@@ -134,7 +138,7 @@ async def search_bluecore(event):
         if int(search_result_json.get('total')) < 1:
             bench_heading.innerHTML = """<h3>No results from Blue Core</h3>"""
         else:
-            bench_heading.innerHTML = f"""<h3>{search_result_json.get('total')} results from Blue Core</h3>"""
+            bench_heading.innerHTML = f"""<h3>{search_result_json.get('total'):,} results from Blue Core</h3>"""
 
         div_query = document.createElement("div")
         div_query.innerHTML = f"""<strong>Query:</strong><p>{query_elem.value}</p>"""
@@ -142,6 +146,7 @@ async def search_bluecore(event):
         for item in search_result_json.get("items", []):
             alert = _add_search_item(item)
             bench_bc_results.append(alert)
+        
 
 
 async def set_environment(this):

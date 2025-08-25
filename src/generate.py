@@ -14,6 +14,7 @@ env = Environment(
 logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
+    print("Starting generation")
     parser = argparse.ArgumentParser()
     src_path = pathlib.Path(__name__)
     time_stamp = datetime.now(UTC)

@@ -31,7 +31,7 @@
           </a>
           <ul class="dropdown-menu">
             <li>
-                <a class="dropdown-item" href="#" py-click="validation.bf"><i class="bi bi-check2-all"></i> Validate w/BIG SHACL</a>
+                <a class="dropdown-item" href="#" py-click="validate"><i class="bi bi-check2-all"></i> Validate w/BIG SHACL</a>
             </li>
             <li>
                 <a class="dropdown-item" href="#" py-click="save_bluecore"><i class="bi bi-floppy"></i> Save</a>
@@ -168,9 +168,51 @@
       </div>
       <div class="col-7">
       <div class="h-100 border rounded bg-light border-secondary-subtle m-1 p-1">
+  
   <h2 id="bench-heading">Welcome to the Graph Toolbox!</h2>
-  <div id="bf-sparql-results" class="overflow-auto"></div>
-  <div id="bc-results" class="overflow-auto"></div>
+  <ul class="nav nav-tabs" id="workbench=tablist" role="tablist">
+    <li class="nav-item d-none" role="presentation" id="search-results-tab">
+        <button class="nav-link"
+              id="search-results-tab-btn"
+              data-bs-toggle="tab"
+              data-bs-target="#search-results"
+              type="button"
+              role="tab"
+              aria-controls="search-results"
+              aria-selected="false">
+            Search Results
+        </button>
+    </li>
+    <li class="nav-item d-none" role="presentation" id="bf-sparql-results-tab">
+        <button class="nav-link" 
+                id="bf-sparql-results-tab-btn" 
+                data-bs-toggle="tab" 
+                data-bs-target="#bf-sparql-results"
+                type="button"
+                role="tab"
+                aria-controls="bf-sparql-results"
+                aria-selected="false">
+            SPARQL Results
+          </button>
+    </li>
+    <li class="nav-item d-none" role="presentation" id="bf-validation-results-tab">
+        <button class="nav-link" 
+                id="bf-validation-results-tab-btn" 
+                data-bs-toggle="tab" 
+                data-bs-target="#bf-validation-results"
+                type="button"
+                role="tab"
+                aria-controls="bf-validation-results"
+                aria-selected="false">
+            SHACL Results
+          </button>
+    </li>
+  </ul>
+  <div class="tab-content" id="work-bench-tab-content">
+    <div id="search-results" class="tab-pane fade overflow-auto"></div>
+    <div id="bf-sparql-results" class="tab-pane fade overflow-auto" aria-labelledby="bf-sparql-results-tab-btn" tabindex="0"></div>
+    <div id="bf-validation-results" class="tab-pane fade overflow-auto" aria-labelledby="" tabindex="0"></div>
+  </div>
 </div>
       </div>
       <div class="col-1">
@@ -207,7 +249,7 @@
     <div class="d-grid mb-2">
         <div class="text-center fw-semibold">Utilities</div>
         <div class="btn-group-vertical" role="group" aria-label="Utilities button group">
-          <button class="btn btn-light btn-lg" py-click="validation.bf">
+          <button class="btn btn-light btn-lg" py-click="validate">
             <i class="bi bi-check2-all" alt="SHACL Validation" width="32px" height="32px" data-bs-toggle="tooltip" data-bs-title="Validate Graph with BIG SHACL"></i>
           </button>
           <button class="btn btn-light btn-lg" py-click="helpers.py_repl">

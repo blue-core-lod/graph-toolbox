@@ -27,19 +27,24 @@ async def create_alert(is_valid: bool, total_triples: int):
 
 
 
-async def bf(graph: rdflib.Graph | None):
+async def validate(event):
     global BF_GRAPH
 
-    if not graph:
-        graph = BF_GRAPH
-
-    console.log(f"BF graph", len(graph))
     validation_graph = rdflib.Graph()
     validation_graph.parse("./shacl/all.ttl", format='turtle')
 
-    conforms, results_graph, _ = pyshacl.validate(
-        graph, shacl_graph=validation_graph, allow_warnings=True
+    conforms, results_graph, results_str = pyshacl.validate(
+        BF_GRAPH, shacl_graph=validation_graph, allow_warnings=True
     )
 
-    alert = create_alert(conforms, len(graph))
-    console.log(conforms, results_graph.serialize(format='turtle'))
+    alert = await create_alert(conforms, len(BF_GRAPH))
+    validation_tab = document.getElementById("bf-validation-results-tab")
+    validation_tab.classList.remove("d-none")
+    validation_tab_pane = document.getElementById("bf-validation-results")
+    validation_tab_pane.classList.remove("d-none")
+    validation_tab_pane.appendChild(alert)
+    results_str = results_graph.serialize(format='turtle')
+    pre = document.createElement("pre")
+    pre.setAttribute("style", "margin: 1em;")
+    pre.innerHTML = results_str.replace("<", "&lt;").replace(">", "&gt;")
+    validation_tab_pane.appendChild(pre)
