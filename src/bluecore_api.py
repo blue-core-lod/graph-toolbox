@@ -135,15 +135,16 @@ async def search_bluecore(event):
     search_result = await pyfetch(search_url)
     if search_result.ok:
         search_result_json = await search_result.json()
-        if int(search_result_json.get('total')) < 1:
+        total_results = len(search_result_json.get('results', [])
+        if total_results < 1:
             bench_heading.innerHTML = """<h3>No results from Blue Core</h3>"""
         else:
-            bench_heading.innerHTML = f"""<h3>{search_result_json.get('total'):,} results from Blue Core</h3>"""
+            bench_heading.innerHTML = f"""<h3>{total_results:,} results from Blue Core</h3>"""
 
         div_query = document.createElement("div")
         div_query.innerHTML = f"""<strong>Query:</strong><p>{query_elem.value}</p>"""
         bench_bc_results.append(div_query)
-        for item in search_result_json.get("items", []):
+        for item in search_result_json.get("results", []):
             alert = _add_search_item(item)
             bench_bc_results.append(alert)
         
