@@ -8,6 +8,8 @@ from js import alert, console, document, File, FormData, sessionStorage
 from pyodide.http import AbortError, pyfetch
 from state import BLUECORE_ENV, BF_GRAPH
 
+BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
+
 def _expires_at(seconds: int) -> str:
     now = datetime.now(UTC)
     expires = now + timedelta(seconds=seconds)
@@ -21,8 +23,18 @@ def _add_search_item(item: dict):
     uri = item.get('uri')
     graph = rdflib.Graph()
     graph.parse(data=item.get('data'), format='json-ld')
+    title_query = graph.query("""
+    SELECT ?mainTitle
+    WHERE {
+        ?title a bf:Title .
+        ?title bf:mainTitle ?mainTitle . 
+    }   
+    """,
+    initNs={"bf": BF})
+    main_titles = [main_title[0] for main_title in title_query]
     alert.innerHTML = f"""<strong class="text-primary">Blue Core Resource</strong>
     <small>{item.get('type').title()}</small>
+    <h3>{'\n'.join(main_titles)}</h3>
     <p>
       <a href="{uri}">{uri}</a>
     </p>
@@ -135,7 +147,7 @@ async def search_bluecore(event):
     search_result = await pyfetch(search_url)
     if search_result.ok:
         search_result_json = await search_result.json()
-        total_results = len(search_result_json.get('results', [])
+        total_results = int(search_result_json.get('total', 0))
         if total_results < 1:
             bench_heading.innerHTML = """<h3>No results from Blue Core</h3>"""
         else:
