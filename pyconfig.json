@@ -9,7 +9,8 @@
     "./static/wheels/isodate-0.6.1-py2.py3-none-any.whl",
     "./static/wheels/pymarc-5.3.1-py3-none-any.whl",
     "./static/wheels/pyshacl-0.30.1-py3-none-any.whl",
-    "./static/wheels/rdflib-7.1.4-py3-none-any.whl"
+    "./static/wheels/rdflib-7.1.4-py3-none-any.whl",
+    "./static/wheels/puepy-0.6.5-py3-none-any.whl"
   ],
   "files": {
     "./shacl/v0.2.0-all.ttl": "./shacl/all.ttl",
@@ -56,5 +57,10 @@
     "./xslt/marc2bf/scriptCrosswalk.xml": "./marc2bf/conf/scriptCrosswalk.xml",
     "./xslt/marc2bf/subjectThesaurus.xml": "./marc2bf/conf/subjectThesaurus.xml",
     "./xslt/bibframe2marc.xsl": "./bibframe2marc.xsl"
+  },
+  "js_modules": {
+    "main": {
+      "https://cdn.jsdelivr.net/npm/morphdom@2.7.4/+esm": "morphdom"
+    }
   }
 }
