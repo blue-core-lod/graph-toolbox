@@ -8,8 +8,21 @@ from jinja2 import Template
 from pyodide.ffi import create_proxy
 from pyodide.http import pyfetch
 
-from state import NAMESPACES, BF_GRAPH
 from sinopia_api import environments
+
+# Define common RDF namespaces
+NAMESPACES = [
+    ("bf", rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")),
+    ("bflc", rdflib.Namespace("http://id.loc.gov/ontologies/bflc/")),
+    ("madsrdf", rdflib.Namespace("http://www.loc.gov/mads/rdf/v1#")),
+    ("sin", rdflib.Namespace("http://sinopia.io/vocabulary/")),
+]
+
+
+def _get_app():
+    """Get the app instance to access state."""
+    from app import app
+    return app
 
 
 def skolemize_resource(resource_url: str, raw_rdf: str) -> str:
@@ -23,7 +36,8 @@ def skolemize_resource(resource_url: str, raw_rdf: str) -> str:
 
 
 async def build_graph(*args) -> rdflib.Graph:
-    global BF_GRAPH
+    app = _get_app()
+    bf_graph = app.state.get("bf_graph")
 
     individual_resources = js.document.getElementById("resource-urls")
     loading_spinner = js.document.getElementById("graph-loading-status")
@@ -45,54 +59,59 @@ async def build_graph(*args) -> rdflib.Graph:
             turtle_rdf = skolemize_resource(
                 resource_url.strip(), resource_payload["data"]
             )
-            BF_GRAPH.parse(data=turtle_rdf, format="turtle")
+            bf_graph.parse(data=turtle_rdf, format="turtle")
     loading_spinner.classList.add("d-none")
-    summarize_graph(BF_GRAPH)
-    return BF_GRAPH
+    app.state["bf_graph"] = bf_graph
+    summarize_graph(bf_graph)
+    return bf_graph
 
 
-async def load_uri(event):
-    global BF_GRAPH
-    button = event.target
-    parent_div = button.parentElement
-    close_btn = parent_div.querySelector(".btn-close")
-    uri = button.getAttribute("data-uri")
-    rdf_data_div = js.document.getElementById(f"{uri}-rdf")
-    rdf_data = rdf_data_div.value
+def load_uri_into_graph(bf_graph: rdflib.Graph, uri: str, rdf_data: str) -> rdflib.Graph:
+    """
+    Load RDF data for a URI into the given graph.
+
+    Args:
+        bf_graph: The RDF graph to load data into
+        uri: The URI of the resource
+        rdf_data: The RDF data as a string (JSON-LD format)
+
+    Returns:
+        The updated graph
+    """
     turtle_rdf = skolemize_resource(uri, rdf_data)
-    BF_GRAPH.parse(data=turtle_rdf, format="turtle")
-    summarize_graph(BF_GRAPH)
-    close_btn.click()
+    bf_graph.parse(data=turtle_rdf, format="turtle")
+    return bf_graph
 
 
 async def download_graph(event):
-    global BF_GRAPH
+    app = _get_app()
+    bf_graph = app.state.get("bf_graph")
 
     anchor = event.target
     serialization = anchor.getAttribute("data-serialization")
 
-    if len(BF_GRAPH) < 1:
+    if not bf_graph or len(bf_graph) < 1:
         js.alert("Empty graph cannot be download")
         return
     for prefix, uri in NAMESPACES:
-        BF_GRAPH.namespace_manager.bind(prefix, uri)
+        bf_graph.namespace_manager.bind(prefix, uri)
     mime_type, contents = None, None
     match serialization:
         case "json-ld":
             mime_type = "application/json"
-            contents = BF_GRAPH.serialize(format="json-ld")
+            contents = bf_graph.serialize(format="json-ld")
 
         case "nt":
             mime_type = "application/n-triples"
-            contents = BF_GRAPH.serialize(format="nt")
+            contents = bf_graph.serialize(format="nt")
 
         case "ttl":
             mime_type = "application/x-turtle"
-            contents = BF_GRAPH.serialize(format="turtle")
+            contents = bf_graph.serialize(format="turtle")
 
         case "xml":
             mime_type = "application/rdf+xml"
-            contents = BF_GRAPH.serialize(format="pretty-xml")
+            contents = bf_graph.serialize(format="pretty-xml")
 
         case _:
             js.alert(f"Unknown RDF serialization {serialization}")
@@ -161,7 +180,8 @@ def bibframe_sparql(element_id: str):
 
 
 async def load_cbd_file(event):
-    global BF_GRAPH
+    app = _get_app()
+    bf_graph = app.state.get("bf_graph")
 
     cbd_file_input = js.document.getElementById("cbd-file")
     cbd_file_modal_close_btn = js.document.getElementById("cbd-modal-close-btn")
@@ -169,6 +189,7 @@ async def load_cbd_file(event):
         cbd_file = cbd_file_input.files.item(0)
         rdf_type = rdflib.util.guess_format(cbd_file_input.value)
         raw_rdf = await cbd_file.text()
-        BF_GRAPH.parse(data=raw_rdf, format=rdf_type)
-        summarize_graph(BF_GRAPH)
+        bf_graph.parse(data=raw_rdf, format=rdf_type)
+        app.state["bf_graph"] = bf_graph
+        summarize_graph(bf_graph)
         cbd_file_modal_close_btn.click()

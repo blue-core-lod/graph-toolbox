@@ -8,7 +8,12 @@ from pyscript import fetch
 
 from helpers import BF
 from load_rdf import summarize_graph
-from state import BF_GRAPH
+
+
+def _get_app():
+    """Get the app instance to access state."""
+    from app import app
+    return app
 
 
 async def _bf_graph_to_xml(bf_graph: rdflib.Graph):
@@ -24,11 +29,13 @@ async def _bf_graph_to_xml(bf_graph: rdflib.Graph):
 
 
 async def bf2marc(event):
-    global BF_GRAPH
+    app = _get_app()
+    bf_graph = app.state.get("bf_graph")
+
     anchor = event.target
     marc_format = anchor.getAttribute("data-marc-format")
 
-    if len(BF_GRAPH) < 1:
+    if not bf_graph or len(bf_graph) < 1:
         alert(
             f"ERROR! Cannot export empty graph to {marc_format[0:4].upper()} {marc_format[4:]}"
         )
@@ -36,7 +43,7 @@ async def bf2marc(event):
 
     xslt_root = etree.parse("./bibframe2marc.xsl")
     bf2marc_xslt = etree.XSLT(xslt_root)
-    bf_xml = await _bf_graph_to_xml(BF_GRAPH)
+    bf_xml = await _bf_graph_to_xml(bf_graph)
     marc_xml = bf2marc_xslt(bf_xml)
 
     match marc_format:
@@ -66,7 +73,9 @@ async def bf2marc(event):
 
 
 async def marc2bf(event):
-    global BF_GRAPH
+    app = _get_app()
+    bf_graph = app.state.get("bf_graph")
+
     marc_upload_file = document.querySelector("#marc-file")
     if marc_upload_file.files.length < 1:
         alert("ERROR! Missing MARC21 or MARC XML file.")
@@ -100,7 +109,8 @@ async def marc2bf(event):
     marc_doc = etree.XML(marc_xml)
     try:
         bf_xml = marc2bf_xslt(marc_doc)
-        BF_GRAPH.parse(data=str(bf_xml), format="xml")
-        summarize_graph(BF_GRAPH)
+        bf_graph.parse(data=str(bf_xml), format="xml")
+        app.state["bf_graph"] = bf_graph
+        summarize_graph(bf_graph)
     except Exception as e:
         alert(f"ERROR! Failed to convert MARC to BIBFRAME\n{e}")

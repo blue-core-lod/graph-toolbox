@@ -2,7 +2,12 @@ import pyshacl
 import rdflib
 
 from js import console, document
-from state import BF_GRAPH
+
+
+def _get_app():
+    """Get the app instance to access state."""
+    from app import app
+    return app
 
 
 async def create_alert(is_valid: bool, total_triples: int):
@@ -27,21 +32,27 @@ async def create_alert(is_valid: bool, total_triples: int):
 
 
 async def validate(event):
-    global BF_GRAPH
+    app = _get_app()
+    bf_graph = app.state.get("bf_graph")
+
+    if not bf_graph:
+        from js import alert
+        alert("Graph not initialized. Please load data first.")
+        return
 
     validation_graph = rdflib.Graph()
     validation_graph.parse("./shacl/all.ttl", format="turtle")
 
     conforms, results_graph, results_str = pyshacl.validate(
-        BF_GRAPH, shacl_graph=validation_graph, allow_warnings=True
+        bf_graph, shacl_graph=validation_graph, allow_warnings=True
     )
 
-    alert = await create_alert(conforms, len(BF_GRAPH))
+    alert_elem = await create_alert(conforms, len(bf_graph))
     validation_tab = document.getElementById("bf-validation-results-tab")
     validation_tab.classList.remove("d-none")
     validation_tab_pane = document.getElementById("bf-validation-results")
     validation_tab_pane.classList.remove("d-none")
-    validation_tab_pane.appendChild(alert)
+    validation_tab_pane.appendChild(alert_elem)
     results_str = results_graph.serialize(format="turtle")
     pre = document.createElement("pre")
     pre.setAttribute("style", "margin: 1em;")

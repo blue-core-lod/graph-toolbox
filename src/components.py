@@ -1,4 +1,9 @@
-from puepy import Component, t
+from puepy import Component, t, Prop
+import rdflib
+
+from js import alert, console, document
+
+BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
 
 
 @t.component()
@@ -1008,3 +1013,141 @@ class AppFooter(Component):
                     "https://github.com/blue-core-lod/graph-explorer",
                     href="https://github.com/blue-core-lod/graph-explorer",
                 )
+
+
+@t.component()
+class SearchResultItem(Component):
+    """
+    Search result item component for displaying Blue Core search results.
+
+    Displays:
+    - Resource type and URI
+    - Main titles extracted from RDF data
+    - Load button to add resource to the graph
+    - Dismiss button to close the alert
+
+    Props:
+    - item: dict containing 'uri', 'data', and 'type' keys
+    """
+
+    props = ["item"]
+
+    @property
+    def uri(self):
+        """Get the URI from the item."""
+        return self.item.get("uri", "") if self.item else ""
+
+    @property
+    def resource_type(self):
+        """Get the resource type from the item."""
+        return self.item.get("type", "").title() if self.item else ""
+
+    @property
+    def main_titles(self):
+        """Extract main titles from the RDF data."""
+        if not self.item or not self.item.get("data"):
+            return []
+
+        graph = rdflib.Graph()
+        graph.parse(data=self.item.get("data"), format="json-ld")
+
+        title_query = graph.query(
+            """
+            SELECT ?mainTitle
+            WHERE {
+                ?title a bf:Title .
+                ?title bf:mainTitle ?mainTitle .
+            }
+            """,
+            initNs={"bf": BF},
+        )
+
+        return [str(main_title[0]) for main_title in title_query]
+
+    @property
+    def serialized_rdf(self):
+        """Get the serialized RDF data as JSON-LD."""
+        if not self.item or not self.item.get("data"):
+            return ""
+
+        graph = rdflib.Graph()
+        graph.parse(data=self.item.get("data"), format="json-ld")
+        return graph.serialize(format="json-ld")
+
+    def populate(self):
+        with t.div(
+            classes=["alert", "alert-info", "alert-dismissible", "fade", "show"]
+        ):
+            with t.strong(classes=["text-primary"]):
+                t("Blue Core Resource")
+            t(" ")
+            t.small(self.resource_type)
+
+            if self.main_titles:
+                t.h3("\n".join(self.main_titles))
+
+            with t.p():
+                t.a(self.uri, href=self.uri)
+
+            # Hidden textarea containing the serialized RDF
+            t.textarea(
+                self.serialized_rdf,
+                classes=["d-none"],
+                id=f"{self.uri}-rdf",
+            )
+
+            with t.button(
+                type="button",
+                classes=["btn", "btn-success"],
+                on_click=self.on_load_uri,
+            ):
+                t("Load")
+
+            t.button(
+                type="button",
+                classes=["btn-close"],
+                data_bs_dismiss="alert",
+                aria_label="Close",
+            )
+
+    def on_load_uri(self, event):
+        console.log("In on_load_uri")
+
+    def on_load_uri_borked(self, event):
+        """
+        Handle the Load button click to load the URI into the graph.
+
+        Args:
+            event: The click event
+        """
+        console.log("Before grabbing graph")
+        from load_rdf import load_uri_into_graph
+
+        # Get the current graph from application state
+        bf_graph = self.application.state.get("bf_graph")
+        console.log(f"In on_load_uri graph size is {len(bf_graph)}")
+        if bf_graph is None:
+            alert("Graph not initialized. Please initialize the application first.")
+            return
+
+        # Get the RDF data from the hidden textarea
+        rdf_data_div = document.getElementById(f"{self.uri}-rdf")
+        if not rdf_data_div:
+            alert(f"Could not find RDF data for {self.uri}")
+            return
+
+        rdf_data = rdf_data_div.value
+
+        # Load the URI into the graph
+        updated_graph = load_uri_into_graph(bf_graph, self.uri, rdf_data)
+
+        # Update the application state with the modified graph
+        self.application.state["bf_graph"] = updated_graph
+
+        # Close the alert by finding and clicking the close button
+        button = event.target
+        parent_div = button.parentElement
+        close_btn = parent_div.querySelector(".btn-close")
+        if close_btn:
+            console.log("Before close button")
+            close_btn.click()

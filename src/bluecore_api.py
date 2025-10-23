@@ -1,13 +1,10 @@
 import json
-import rdflib
 
 from datetime import datetime, timedelta, UTC
 from urllib.parse import urlencode
 
 from js import alert, console, document, File, FormData, sessionStorage
 from pyodide.http import AbortError, pyfetch
-
-BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
 
 
 def _get_app():
@@ -20,38 +17,6 @@ def _expires_at(seconds: int) -> str:
     now = datetime.now(UTC)
     expires = now + timedelta(seconds=seconds)
     return expires.isoformat()
-
-
-def _add_search_item(item: dict):
-    alert = document.createElement("div")
-    for class_ in ["alert", "alert-info", "alert-dismissible", "fade", "show"]:
-        alert.classList.add(class_)
-    uri = item.get("uri")
-    graph = rdflib.Graph()
-    graph.parse(data=item.get("data"), format="json-ld")
-    title_query = graph.query(
-        """
-    SELECT ?mainTitle
-    WHERE {
-        ?title a bf:Title .
-        ?title bf:mainTitle ?mainTitle . 
-    }   
-    """,
-        initNs={"bf": BF},
-    )
-    main_titles = [main_title[0] for main_title in title_query]
-    alert.innerHTML = f"""<strong class="text-primary">Blue Core Resource</strong>
-    <small>{item.get("type").title()}</small>
-    <h3>{"\n".join(main_titles)}</h3>
-    <p>
-      <a href="{uri}">{uri}</a>
-    </p>
-    <textarea class="d-none" id="{uri}-rdf">{graph.serialize(format="json-ld")}</textarea>
-    <button type="button" class="btn btn-success"
-            data-uri="{item.get("uri")}" py-click="load_uri">Load</button>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    """
-    return alert
 
 
 async def _get_keycloak_token():
@@ -141,8 +106,14 @@ async def save_bluecore(event):
 
 async def search_bluecore(event):
     """
-    Searches Blue Core using API
+    Searches Blue Core using API.
+    Creates search result items using direct DOM manipulation.
     """
+    import rdflib
+    from pyodide.ffi import create_proxy
+
+    BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
+
     app = _get_app()
     bluecore_env = app.state.get("bluecore_env")
 
@@ -169,14 +140,98 @@ async def search_bluecore(event):
         div_query = document.createElement("div")
         div_query.innerHTML = f"""<strong>Query:</strong><p>{query_elem.value}</p>"""
         bench_bc_results.append(div_query)
+
+        # Create search result items using direct DOM manipulation
+        # Note: SearchResultItem component exists in components.py but is meant for use
+        # within Puepy templates. For programmatic creation, we use DOM directly.
         for item in search_result_json.get("results", []):
-            alert = _add_search_item(item)
-            bench_bc_results.append(alert)
+            from load_rdf import load_uri_into_graph
+
+            # Create alert container
+            alert_div = document.createElement("div")
+            for class_ in ["alert", "alert-info", "alert-dismissible", "fade", "show"]:
+                alert_div.classList.add(class_)
+
+            # Extract data from item
+            uri = item.get("uri", "")
+            resource_type = item.get("type", "").title()
+
+            # Parse RDF data and extract titles
+            graph = rdflib.Graph()
+            graph.parse(data=item.get("data"), format="json-ld")
+            title_query = graph.query(
+                """
+                SELECT ?mainTitle
+                WHERE {
+                    ?title a bf:Title .
+                    ?title bf:mainTitle ?mainTitle .
+                }
+                """,
+                initNs={"bf": BF},
+            )
+            main_titles = [str(main_title[0]) for main_title in title_query]
+            serialized_rdf = graph.serialize(format="json-ld")
+
+            # Build HTML content
+            titles_html = f"<h3>{chr(10).join(main_titles)}</h3>" if main_titles else ""
+
+            alert_div.innerHTML = f"""
+                <strong class="text-primary">Blue Core Resource</strong>
+                <small>{resource_type}</small>
+                {titles_html}
+                <p><a href="{uri}">{uri}</a></p>
+                <textarea class="d-none" id="{uri}-rdf">{serialized_rdf}</textarea>
+                <button type="button" class="btn btn-success btn-load-uri" data-uri="{uri}">Load</button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            """
+
+            # Add click handler for Load button
+            def create_load_handler(item_uri):
+                def handler(event):
+                    from load_rdf import load_uri_into_graph
+                    from js import document
+
+                    # Get the current graph from application state
+                    bf_graph = app.state.get("bf_graph")
+                    if bf_graph is None:
+                        alert("Graph not initialized. Please initialize the application first.")
+                        return
+
+                    # Get the RDF data
+                    rdf_data_div = document.getElementById(f"{item_uri}-rdf")
+                    if not rdf_data_div:
+                        alert(f"Could not find RDF data for {item_uri}")
+                        return
+
+                    rdf_data = rdf_data_div.value
+
+                    # Load the URI into the graph
+                    updated_graph = load_uri_into_graph(bf_graph, item_uri, rdf_data)
+
+                    # Update the application state
+                    app.state["bf_graph"] = updated_graph
+
+                    # Close the alert
+                    button = event.target
+                    parent_div = button.parentElement
+                    close_btn = parent_div.querySelector(".btn-close")
+                    if close_btn:
+                        close_btn.click()
+
+                return handler
+
+            # Find and attach the load button handler
+            load_button = alert_div.querySelector(".btn-load-uri")
+            if load_button:
+                # Create a proxy to prevent the handler from being garbage collected
+                handler_proxy = create_proxy(create_load_handler(uri))
+                load_button.addEventListener("click", handler_proxy)
+
+            bench_bc_results.append(alert_div)
 
 
 async def set_environment(this):
     app = _get_app()
-    console.log(this)
     bluecore_env = this.target.getAttribute("data-env")
     app.state["bluecore_env"] = bluecore_env
     sessionStorage.removeItem("keycloak_access_token")
