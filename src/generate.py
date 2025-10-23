@@ -8,7 +8,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 env = Environment(
     loader=FileSystemLoader("src/templates"),
-    autoescape=select_autoescape(['html', 'xml'])
+    autoescape=select_autoescape(["html", "xml"]),
 )
 
 logger = logging.getLogger(__name__)
@@ -24,4 +24,3 @@ if __name__ == "__main__":
         fo.write(index_template.render(timestamp=time_stamp))
     total_time = (datetime.now(UTC) - time_stamp).seconds
     logger.info(f"Total time {total_time}")
-

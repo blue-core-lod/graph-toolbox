@@ -6,8 +6,6 @@ import pandas as pd
 
 import helpers
 
-from pyparsing.exceptions import ParseException
-from helpers import remove_errors
 from load_rdf import bibframe_sparql
 from state import RESULTS_DF, BF_GRAPH
 
@@ -83,7 +81,6 @@ async def run_query(*args):
     global RESULTS_DF
     global BF_GRAPH
 
-    await remove_errors()
     bench_header = js.document.getElementById("bench-heading")
     query_element = js.document.getElementById("bf-sparql-query")
     sparql_query = query_element.value
@@ -92,7 +89,7 @@ async def run_query(*args):
     output_element = js.document.getElementById("bf-sparql-results")
     for class_ in ["active", "show"]:
         output_element.classList.add(class_)
-    output_element.innerHTML = ""
+    output_element.content = ""
     try:
         query = BF_GRAPH.query(sparql_query)
         RESULTS_DF = pd.DataFrame(query.bindings)
@@ -100,21 +97,16 @@ async def run_query(*args):
             vars=query.vars, results=query.bindings
         )
         bench_header.innerHTML = f"<h2>Query Results {len(query.bindings):,} Rows</h2>"
-    except ParseException:
-        # Try to do a SPARQL Update
-        BF_GRAPH.update(sparql_query)
-        output_element.innerHTML = f"Query:<pre>{sparql_query}</pre>"
-        bench_header.innerHTML = f"<h2>Updated SPARQL</h2>"
     except Exception as e:
         output_element.content = f"""<h2>Query Error</h2><p>{e}</p>"""
 
 
 async def run_summary_query(event):
-    data_query = getattr(event.target.attributes, 'data-query')
-    query_element = js.document.getElementById("bf-sparql-query")
+    data_query = getattr(event.target.attributes, "data-query")
+
     match data_query.value:
         case "all":
-            sparql_query =  """SELECT ?subject ?predicate ?object WHERE { ?subject ?predicate ?object . }"""
+            sparql_query = """SELECT ?subject ?predicate ?object WHERE { ?subject ?predicate ?object . }"""
 
         case "object":
             sparql_query = """SELECT DISTINCT ?object WHERE { ?s ?p ?object . }"""
@@ -125,11 +117,8 @@ async def run_summary_query(event):
         case "subject":
             sparql_query = """SELECT DISTINCT ?subject WHERE { ?subject ?p ?o . }"""
 
-          
     bibframe_sparql("bf-sparql-query")
-    query_element.value = f"{query_element.value}\n{sparql_query}"
+    query_element = js.document.getElementById("bf-sparql-query")
+    query_element.innerHTML = f"{query_element.innerHTML}\n{sparql_query}"
     run_query_btn = js.document.getElementById("run-query-btn")
     run_query_btn.click()
-
-
-    

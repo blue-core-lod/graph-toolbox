@@ -12,10 +12,13 @@ from state import BF_GRAPH
 
 
 async def _bf_graph_to_xml(bf_graph: rdflib.Graph):
-    instances = [instance for instance in bf_graph.subjects(predicate=rdflib.RDF.type, object=BF.Instance)]
+    instances = [
+        instance
+        for instance in bf_graph.subjects(predicate=rdflib.RDF.type, object=BF.Instance)
+    ]
     if len(instances) < 1:
         alert(f"ERROR! Need at least 1 BIBFRAME Instance")
-    #bf_graph = bf_graph.de_skolemize(uriref=instances[0])
+    # bf_graph = bf_graph.de_skolemize(uriref=instances[0])
     raw_xml = bf_graph.serialize(format="pretty-xml")
     return etree.XML(bytes(raw_xml, encoding="utf-8"))
 
@@ -26,7 +29,9 @@ async def bf2marc(event):
     marc_format = anchor.getAttribute("data-marc-format")
 
     if len(BF_GRAPH) < 1:
-        alert(f"ERROR! Cannot export empty graph to {marc_format[0:4].upper()} {marc_format[4:]}")
+        alert(
+            f"ERROR! Cannot export empty graph to {marc_format[0:4].upper()} {marc_format[4:]}"
+        )
         return
 
     xslt_root = etree.parse("./bibframe2marc.xsl")
@@ -35,7 +40,6 @@ async def bf2marc(event):
     marc_xml = bf2marc_xslt(bf_xml)
 
     match marc_format:
-
         case "marc21":
             with open("temp.xml", "w+") as fo:
                 fo.write(str(marc_xml))
@@ -65,7 +69,7 @@ async def marc2bf(event):
     global BF_GRAPH
     marc_upload_file = document.querySelector("#marc-file")
     if marc_upload_file.files.length < 1:
-        alert("ERROR! Missing MARC21 or MARC XML file.") 
+        alert("ERROR! Missing MARC21 or MARC XML file.")
         return
     raw_marc_file = marc_upload_file.files.item(0)
     ext = raw_marc_file.name.split(".")[-1]
@@ -86,7 +90,9 @@ async def marc2bf(event):
             marc_xml = await raw_marc_file.text()
 
         case _:
-            alert(f"ERROR! Unknown file type {raw_marc_file.name}, should be mrc, marc, or xml")
+            alert(
+                f"ERROR! Unknown file type {raw_marc_file.name}, should be mrc, marc, or xml"
+            )
             return
 
     xslt_root = etree.parse("./marc2bf/marc2bibframe2.xsl")
@@ -94,7 +100,7 @@ async def marc2bf(event):
     marc_doc = etree.XML(marc_xml)
     try:
         bf_xml = marc2bf_xslt(marc_doc)
-        BF_GRAPH.parse(data=str(bf_xml), format='xml')
+        BF_GRAPH.parse(data=str(bf_xml), format="xml")
         summarize_graph(BF_GRAPH)
     except Exception as e:
         alert(f"ERROR! Failed to convert MARC to BIBFRAME\n{e}")

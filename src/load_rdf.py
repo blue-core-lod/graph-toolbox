@@ -17,8 +17,8 @@ def skolemize_resource(resource_url: str, raw_rdf: str) -> str:
     if not isinstance(raw_rdf, str):
         raw_rdf = json.dumps(raw_rdf)
     resource_graph.parse(data=raw_rdf, format="json-ld")
-    #skolemize_graph = resource_graph.skolemize(basepath=f"{resource_url.strip()}#")
-    #return skolemize_graph.serialize(format="turtle")
+    # skolemize_graph = resource_graph.skolemize(basepath=f"{resource_url.strip()}#")
+    # return skolemize_graph.serialize(format="turtle")
     return resource_graph.serialize(format="turtle")
 
 
@@ -63,7 +63,6 @@ async def load_uri(event):
     BF_GRAPH.parse(data=turtle_rdf, format="turtle")
     summarize_graph(BF_GRAPH)
     close_btn.click()
-
 
 
 async def download_graph(event):
@@ -116,13 +115,13 @@ def summarize_graph(graph: rdflib.Graph):
     subjects_count_badge = js.document.getElementById("subjects-count")
     predicates_count_badge = js.document.getElementById("predicates-count")
     objects_count_badge = js.document.getElementById("objects-count")
-    counts=query_result.bindings[0]
-    subjects_count = int(counts.get('subjCount'))
-    predicates_count = int(counts.get('predCount'))
-    objects_count = int(counts.get('objCount'))
+    counts = query_result.bindings[0]
+    subjects_count = int(counts.get("subjCount"))
+    predicates_count = int(counts.get("predCount"))
+    objects_count = int(counts.get("objCount"))
     total_triples_badge.innerHTML = f"{len(graph):,}"
     subjects_count_badge.innerHTML = f"{subjects_count:,}"
-    predicates_count_badge.innerHTML = f"{predicates_count :,}"
+    predicates_count_badge.innerHTML = f"{predicates_count:,}"
     objects_count_badge.innerHTML = f"{objects_count:,}"
     works_result = graph.query(
         """
@@ -148,7 +147,7 @@ def summarize_graph(graph: rdflib.Graph):
     instances_count = instances_result.bindings[0]
     instances_count_badge = js.document.getElementById("bf-instances-count")
     instances_count_badge.innerHTML = f"{int(instances_count.get('instanceCount')):,}"
-    
+
 
 sparql_template = Template(
     """{% for ns in namespaces %}PREFIX {{ ns[0] }}: <{{ ns[1] }}>\n{% endfor %}"""

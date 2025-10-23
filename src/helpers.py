@@ -1,9 +1,10 @@
 import markdown
 import rdflib
 
-from js import console, document
-    
+from js import document
+
 BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
+
 
 def set_versions(version):
     version_element = document.getElementById("version")
@@ -19,14 +20,10 @@ async def render_markdown(element_id):
     raw_mkdwn = element.innerText
     element.innerHTML = markdown.markdown(raw_mkdwn)
 
+
 async def py_repl(event):
     py_repl_div = document.getElementById("py-repl")
     if "d-none" in py_repl_div.classList:
         py_repl_div.classList.remove("d-none")
     else:
         py_repl_div.classList.add("d-none")
-
-async def remove_errors(class_name="py-error"):
-    py_errors = document.getElementsByClassName(class_name)
-    for element in py_errors:
-        element.parentNode.removeChild(element)

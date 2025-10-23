@@ -53,7 +53,6 @@ async def _on_load_groups(event):
 
 
 def _environment_checkbox(env):
-
     div = js.document.createElement("div")
     div.classList.add("form-check")
     ident = env[1]

@@ -4,6 +4,7 @@ import rdflib
 from js import console, document
 from state import BF_GRAPH
 
+
 async def create_alert(is_valid: bool, total_triples: int):
     alert = document.createElement("div")
     alert.setAttribute("style", "margin: 1em;")
@@ -11,7 +12,6 @@ async def create_alert(is_valid: bool, total_triples: int):
     alert_msg = f"{total_triples:,} triples"
     css_classes = ["alert", "alert-dismissible", "fade", "show"]
     match is_valid:
-
         case True:
             css_classes.append("alert-success")
             alert.innerText = f"{alert_msg} Passed!"
@@ -26,12 +26,11 @@ async def create_alert(is_valid: bool, total_triples: int):
     return alert
 
 
-
 async def validate(event):
     global BF_GRAPH
 
     validation_graph = rdflib.Graph()
-    validation_graph.parse("./shacl/all.ttl", format='turtle')
+    validation_graph.parse("./shacl/all.ttl", format="turtle")
 
     conforms, results_graph, results_str = pyshacl.validate(
         BF_GRAPH, shacl_graph=validation_graph, allow_warnings=True
@@ -43,7 +42,7 @@ async def validate(event):
     validation_tab_pane = document.getElementById("bf-validation-results")
     validation_tab_pane.classList.remove("d-none")
     validation_tab_pane.appendChild(alert)
-    results_str = results_graph.serialize(format='turtle')
+    results_str = results_graph.serialize(format="turtle")
     pre = document.createElement("pre")
     pre.setAttribute("style", "margin: 1em;")
     pre.innerHTML = results_str.replace("<", "&lt;").replace(">", "&gt;")
