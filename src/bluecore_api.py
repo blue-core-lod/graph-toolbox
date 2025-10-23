@@ -6,9 +6,14 @@ from urllib.parse import urlencode
 
 from js import alert, console, document, File, FormData, sessionStorage
 from pyodide.http import AbortError, pyfetch
-from state import BLUECORE_ENV, BF_GRAPH
 
 BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
+
+
+def _get_app():
+    """Get the app instance to access state."""
+    from app import app
+    return app
 
 
 def _expires_at(seconds: int) -> str:
@@ -98,27 +103,28 @@ async def bluecore_login(event):
 
 
 async def save_bluecore(event):
-    global BLUECORE_ENV
-    global BF_GRAPH
+    app = _get_app()
+    bluecore_env = app.state.get("bluecore_env")
+    bf_graph = app.state.get("bf_graph")
 
-    if BLUECORE_ENV is None:
+    if bluecore_env is None:
         alert(f"Cannot save!\nBluecore Environment not set")
         return
-    if len(BF_GRAPH) < 0:
+    if len(bf_graph) < 0:
         alert(f"Cannot save empty graph")
         return
     access_token = sessionStorage.getItem("keycloak_access_token")
     form_data = FormData.new()
 
     bf_upload_file = File.new(
-        [BF_GRAPH.serialize(format="json-ld")], "upload", {"type": "text/plain"}
+        [bf_graph.serialize(format="json-ld")], "upload", {"type": "text/plain"}
     )
     form_data.append("file", bf_upload_file)
     bench_heading = document.getElementById("bench-heading")
     bench_bc_result = document.getElementById("bc-results")
     bench_bc_result.innerHTML = ""
     batch_result = await pyfetch(
-        f"{BLUECORE_ENV}/api/batches/upload/",
+        f"{bluecore_env}/api/batches/upload/",
         method="POST",
         headers={"Authorization": f"Bearer {access_token}"},
         body=form_data,
@@ -126,7 +132,7 @@ async def save_bluecore(event):
     if batch_result.ok:
         bench_heading.innerHTML = "Saving Graph to Blue Core API"
         batch_message = await batch_result.json()
-        workflow_uri = f"{BLUECORE_ENV}/workflows/dags/resource_loader/runs/{batch_message.get('workflow_id')}"
+        workflow_uri = f"{bluecore_env}/workflows/dags/resource_loader/runs/{batch_message.get('workflow_id')}"
         bench_bc_result.innerHTML = f"""Workflow at <a href="{workflow_uri}" target="_blank">{workflow_uri}</a>"""
     else:
         bench_heading.innerHTML = """<span class="text-danger">ERROR!!</span>"""
@@ -137,7 +143,8 @@ async def search_bluecore(event):
     """
     Searches Blue Core using API
     """
-    global BLUECORE_ENV
+    app = _get_app()
+    bluecore_env = app.state.get("bluecore_env")
 
     query_elem = document.getElementById("ai-search-resources")
     bench_heading = document.getElementById("bench-heading")
@@ -147,7 +154,7 @@ async def search_bluecore(event):
     for class_ in ["active", "show"]:
         bench_bc_results.classList.add(class_)
     bench_bc_results.innerHTML = ""
-    search_url = f"{BLUECORE_ENV}/api/search?" + urlencode({"q": query_elem.value})
+    search_url = f"{bluecore_env}/api/search?" + urlencode({"q": query_elem.value})
     search_result = await pyfetch(search_url)
     if search_result.ok:
         search_result_json = await search_result.json()
@@ -168,11 +175,10 @@ async def search_bluecore(event):
 
 
 async def set_environment(this):
-    global BLUECORE_ENV
+    app = _get_app()
     console.log(this)
-    BLUECORE_ENV = this.target.getAttribute("data-env")
-    bluecore_env_label = document.getElementById("bluecore-env-label")
-    bluecore_env_label.innerHTML = f"for {BLUECORE_ENV}"
+    bluecore_env = this.target.getAttribute("data-env")
+    app.state["bluecore_env"] = bluecore_env
     sessionStorage.removeItem("keycloak_access_token")
     sessionStorage.removeItem("keycloak_access_expires")
     sessionStorage.removeItem("keycloak_refresh_token")

@@ -19,9 +19,14 @@ from modals import (
     UrlsModal,
     LoginModal,
 )
+import rdflib
 
 app = Application()
 app.install_router(Router, link_mode=Router.LINK_MODE_HASH)
+
+# Initialize application state
+app.state["bf_graph"] = rdflib.Graph()
+app.state["bluecore_env"] = None
 
 
 @app.page()
