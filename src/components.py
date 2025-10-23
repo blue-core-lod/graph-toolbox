@@ -1,4 +1,13 @@
-from puepy import Component, t
+import rdflib
+
+from js import alert, console, document, sessionStorage
+from puepy import Component, t, Prop
+
+from bluecore_api import save_bluecore as api_save_bluecore
+from bluecore_api import search_bluecore as api_search_bluecore
+
+
+BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
 
 
 @t.component()
@@ -234,15 +243,15 @@ class GraphInfoToolbar(Component):
         # This should query the RDF graph and update the corresponding count
         pass
 
-    def on_save_bluecore(self, event):
+    async def on_save_bluecore(self, event):
         """
         Handle save to Blue Core button click.
 
         Args:
             event: The click event
         """
-        # TODO: Implement save to Blue Core logic
-        pass
+
+        await api_save_bluecore(event, app=self.application)
 
 
 @t.component()
@@ -536,8 +545,7 @@ class GraphSearchQueryToolbar(Component):
         Args:
             event: The click event
         """
-        from bluecore_api import search_bluecore as api_search_bluecore
-        await api_search_bluecore(event)
+        await api_search_bluecore(event, app=self.application)
 
     def run_query(self, event):
         """
@@ -638,9 +646,10 @@ class GraphWorkBench(Component):
             # Tab content
             with t.div(classes=["tab-content"], id="work-bench-tab-content"):
                 # Search results pane
-                t.div(
+                with t.div(
                     id="search-results", classes=["tab-pane", "fade", "overflow-auto"]
-                )
+                ):
+                    t.search_results_list()
 
                 # SPARQL results pane
                 t.div(
@@ -936,15 +945,14 @@ class Navbar(Component):
         # TODO: Implement SHACL validation logic
         pass
 
-    def save_bluecore(self, event):
+    async def save_bluecore(self, event):
         """
         Handle save to Blue Core menu item click.
 
         Args:
             event: The click event
         """
-        # TODO: Implement save to Blue Core logic
-        pass
+        await api_save_bluecore(event, app=self.application)
 
     def set_environment(self, event, env_url):
         """
@@ -954,7 +962,6 @@ class Navbar(Component):
             event: The click event
             env_url: The environment URL to set
         """
-        from js import sessionStorage
 
         self.application.state["bluecore_env"] = env_url
 
@@ -963,6 +970,7 @@ class Navbar(Component):
         sessionStorage.removeItem("keycloak_access_expires")
         sessionStorage.removeItem("keycloak_refresh_token")
         sessionStorage.removeItem("keycloak_refresh_expires")
+        console.log(f"Environment set {env_url} {self.application.state}")
 
     def download_graph(self, event, serialization):
         """
@@ -1008,3 +1016,173 @@ class AppFooter(Component):
                     "https://github.com/blue-core-lod/graph-explorer",
                     href="https://github.com/blue-core-lod/graph-explorer",
                 )
+
+
+@t.component()
+class SearchResultsList(Component):
+    """
+    Container component for displaying a list of search results.
+
+    Watches the search_results state and renders SearchResultItem components.
+    """
+
+    redraw_on_app_state_changes = ["search_results"]
+
+    @property
+    def search_results(self):
+        """Get search results from application state."""
+        return self.application.state.get("search_results", [])
+
+    @property
+    def search_query(self):
+        """Get the search query from the textarea."""
+        query_elem = document.getElementById("ai-search-resources")
+        return query_elem.value if query_elem else ""
+
+    def populate(self):
+        if not self.search_results:
+            return
+
+        # Display the query
+        if self.search_query:
+            with t.div():
+                with t.strong():
+                    t("Query:")
+                with t.p():
+                    t(self.search_query)
+
+        # Render each search result item
+        for item in self.search_results:
+            t.search_result_item(item=item)
+
+
+@t.component()
+class SearchResultItem(Component):
+    """
+    Search result item component for displaying Blue Core search results.
+
+    Displays:
+    - Resource type and URI
+    - Main titles extracted from RDF data
+    - Load button to add resource to the graph
+    - Dismiss button to close the alert
+
+    Props:
+    - item: dict containing 'uri', 'data', and 'type' keys
+    """
+
+    props = ["item"]
+
+    @property
+    def uri(self):
+        """Get the URI from the item."""
+        return self.item.get("uri", "") if self.item else ""
+
+    @property
+    def resource_type(self):
+        """Get the resource type from the item."""
+        return self.item.get("type", "").title() if self.item else ""
+
+    @property
+    def main_titles(self):
+        """Extract main titles from the RDF data."""
+        if not self.item or not self.item.get("data"):
+            return []
+
+        graph = rdflib.Graph()
+        graph.parse(data=self.item.get("data"), format="json-ld")
+
+        title_query = graph.query(
+            """
+            SELECT ?mainTitle
+            WHERE {
+                ?title a bf:Title .
+                ?title bf:mainTitle ?mainTitle .
+            }
+            """,
+            initNs={"bf": BF},
+        )
+
+        return [str(main_title[0]) for main_title in title_query]
+
+    @property
+    def serialized_rdf(self):
+        """Get the serialized RDF data as JSON-LD."""
+        if not self.item or not self.item.get("data"):
+            return ""
+
+        graph = rdflib.Graph()
+        graph.parse(data=self.item.get("data"), format="json-ld")
+        return graph.serialize(format="json-ld")
+
+    def populate(self):
+        with t.div(
+            classes=["alert", "alert-info", "alert-dismissible", "fade", "show"]
+        ):
+            with t.strong(classes=["text-primary"]):
+                t("Blue Core Resource")
+            t(" ")
+            t.small(self.resource_type)
+
+            if self.main_titles:
+                t.h3("\n".join(self.main_titles))
+
+            with t.p():
+                t.a(self.uri, href=self.uri)
+
+            # Hidden textarea containing the serialized RDF
+            t.textarea(
+                self.serialized_rdf,
+                classes=["d-none"],
+                id=f"{self.uri}-rdf",
+            )
+
+            with t.button(
+                type="button",
+                classes=["btn", "btn-success"],
+                on_click=self.on_load_uri,
+            ):
+                t("Load")
+
+            t.button(
+                type="button",
+                classes=["btn-close"],
+                data_bs_dismiss="alert",
+                aria_label="Close",
+            )
+
+    def on_load_uri(self, event):
+        """
+        Handle the Load button click to load the URI into the graph.
+
+        Args:
+            event: The click event
+        """
+        from load_rdf import load_uri_into_graph
+
+        # Get the current graph from application state
+        bf_graph = self.application.state.get("bf_graph")
+
+        if bf_graph is None:
+            alert("Graph not initialized. Please initialize the application first.")
+            return
+
+        # Get the RDF data from the hidden textarea
+        rdf_data_div = document.getElementById(f"{self.uri}-rdf")
+        if not rdf_data_div:
+            alert(f"Could not find RDF data for {self.uri}")
+            return
+
+        rdf_data = rdf_data_div.value
+
+        # Load the URI into the graph
+        updated_graph = load_uri_into_graph(bf_graph, self.uri, rdf_data)
+
+        # Update the application state with the modified graph
+        self.application.state["bf_graph"] = updated_graph
+
+        # Remove this item from search results
+        search_results = self.application.state.get("search_results", [])
+        self.application.state["search_results"] = [
+            r for r in search_results if r.get("uri") != self.uri
+        ]

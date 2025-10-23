@@ -7,6 +7,7 @@ from components import (
     GraphWorkBench,
     Navbar,
     AppFooter,
+    SearchResultsList,
 )
 from modals import (
     AiAssistanceModal,
@@ -27,6 +28,7 @@ app.install_router(Router, link_mode=Router.LINK_MODE_HASH)
 # Initialize application state
 app.state["bf_graph"] = rdflib.Graph()
 app.state["bluecore_env"] = None
+app.state["search_results"] = []
 
 
 @app.page()

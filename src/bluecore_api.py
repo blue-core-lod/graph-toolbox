@@ -1,5 +1,4 @@
 import json
-import rdflib
 
 from datetime import datetime, timedelta, UTC
 from urllib.parse import urlencode
@@ -7,12 +6,11 @@ from urllib.parse import urlencode
 from js import alert, console, document, File, FormData, sessionStorage
 from pyodide.http import AbortError, pyfetch
 
-BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
-
 
 def _get_app():
     """Get the app instance to access state."""
     from app import app
+
     return app
 
 
@@ -20,38 +18,6 @@ def _expires_at(seconds: int) -> str:
     now = datetime.now(UTC)
     expires = now + timedelta(seconds=seconds)
     return expires.isoformat()
-
-
-def _add_search_item(item: dict):
-    alert = document.createElement("div")
-    for class_ in ["alert", "alert-info", "alert-dismissible", "fade", "show"]:
-        alert.classList.add(class_)
-    uri = item.get("uri")
-    graph = rdflib.Graph()
-    graph.parse(data=item.get("data"), format="json-ld")
-    title_query = graph.query(
-        """
-    SELECT ?mainTitle
-    WHERE {
-        ?title a bf:Title .
-        ?title bf:mainTitle ?mainTitle . 
-    }   
-    """,
-        initNs={"bf": BF},
-    )
-    main_titles = [main_title[0] for main_title in title_query]
-    alert.innerHTML = f"""<strong class="text-primary">Blue Core Resource</strong>
-    <small>{item.get("type").title()}</small>
-    <h3>{"\n".join(main_titles)}</h3>
-    <p>
-      <a href="{uri}">{uri}</a>
-    </p>
-    <textarea class="d-none" id="{uri}-rdf">{graph.serialize(format="json-ld")}</textarea>
-    <button type="button" class="btn btn-success"
-            data-uri="{item.get("uri")}" py-click="load_uri">Load</button>
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    """
-    return alert
 
 
 async def _get_keycloak_token():
@@ -102,8 +68,9 @@ async def bluecore_login(event):
     close_btn.click()
 
 
-async def save_bluecore(event):
-    app = _get_app()
+async def save_bluecore(event, app=None):
+    if app is None:
+        app = _get_app()
     bluecore_env = app.state.get("bluecore_env")
     bf_graph = app.state.get("bf_graph")
 
@@ -139,44 +106,45 @@ async def save_bluecore(event):
         bench_bc_result.innerHTML = await batch_result.text
 
 
-async def search_bluecore(event):
+async def search_bluecore(event, app=None):
     """
-    Searches Blue Core using API
+    Searches Blue Core using API.
+    Stores results in application state for Puepy components to render.
     """
-    app = _get_app()
-    bluecore_env = app.state.get("bluecore_env")
+    if app is None:
+        app = _get_app()
 
+    bluecore_env = app.state.get("bluecore_env")
     query_elem = document.getElementById("ai-search-resources")
     bench_heading = document.getElementById("bench-heading")
     search_results_tab = document.getElementById("search-results-tab")
     search_results_tab.classList.remove("d-none")
-    bench_bc_results = document.getElementById("search-results")
+    search_results_div = document.getElementById("search-results")
+
+    # Activate the search results tab
     for class_ in ["active", "show"]:
-        bench_bc_results.classList.add(class_)
-    bench_bc_results.innerHTML = ""
+        search_results_div.classList.add(class_)
+
     search_url = f"{bluecore_env}/api/search?" + urlencode({"q": query_elem.value})
     search_result = await pyfetch(search_url)
+
     if search_result.ok:
         search_result_json = await search_result.json()
         total_results = int(search_result_json.get("total", 0))
+
         if total_results < 1:
             bench_heading.innerHTML = """<h3>No results from Blue Core</h3>"""
+            app.state["search_results"] = []
         else:
             bench_heading.innerHTML = (
                 f"""<h3>{total_results:,} results from Blue Core</h3>"""
             )
-
-        div_query = document.createElement("div")
-        div_query.innerHTML = f"""<strong>Query:</strong><p>{query_elem.value}</p>"""
-        bench_bc_results.append(div_query)
-        for item in search_result_json.get("results", []):
-            alert = _add_search_item(item)
-            bench_bc_results.append(alert)
+            # Store results in state - Puepy components will render them
+            app.state["search_results"] = search_result_json.get("results", [])
 
 
 async def set_environment(this):
     app = _get_app()
-    console.log(this)
     bluecore_env = this.target.getAttribute("data-env")
     app.state["bluecore_env"] = bluecore_env
     sessionStorage.removeItem("keycloak_access_token")

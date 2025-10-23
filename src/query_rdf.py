@@ -7,10 +7,14 @@ import pandas as pd
 import helpers
 
 from load_rdf import bibframe_sparql
-from state import RESULTS_DF, BF_GRAPH
-
 
 from jinja2 import Template
+
+
+def _get_app():
+    """Get the app instance to access state."""
+    from app import app
+    return app
 
 query_results_template = Template(
     """<div class="w-100">
@@ -53,17 +57,24 @@ query_results_template = Template(
 
 
 async def download_query_results(event):
+    app = _get_app()
+    results_df = app.state.get("results_df")
+
+    if results_df is None:
+        js.alert("No query results to download")
+        return
+
     serialization = event.target.getAttribute("data-serialization")
-    js.console.log(f"Download query results {serialization} {len(RESULTS_DF)}")
+    js.console.log(f"Download query results {serialization} {len(results_df)}")
     mime_type, content = None, None
     match serialization:
         case "csv":
             mime_type = "text/csv"
-            contents = RESULTS_DF.to_csv(index=False)
+            contents = results_df.to_csv(index=False)
 
         case "json":
             mime_type = "application/json"
-            contents = json.dumps(RESULTS_DF.to_dict(orient="records"))
+            contents = json.dumps(results_df.to_dict(orient="records"))
 
         case _:
             js.alert(f"Unknown serialization {serialization}")
@@ -78,8 +89,12 @@ async def download_query_results(event):
 
 
 async def run_query(*args):
-    global RESULTS_DF
-    global BF_GRAPH
+    app = _get_app()
+    bf_graph = app.state.get("bf_graph")
+
+    if not bf_graph:
+        js.alert("Graph not initialized. Please load data first.")
+        return
 
     bench_header = js.document.getElementById("bench-heading")
     query_element = js.document.getElementById("bf-sparql-query")
@@ -91,8 +106,9 @@ async def run_query(*args):
         output_element.classList.add(class_)
     output_element.content = ""
     try:
-        query = BF_GRAPH.query(sparql_query)
-        RESULTS_DF = pd.DataFrame(query.bindings)
+        query = bf_graph.query(sparql_query)
+        results_df = pd.DataFrame(query.bindings)
+        app.state["results_df"] = results_df
         output_element.innerHTML = query_results_template.render(
             vars=query.vars, results=query.bindings
         )
