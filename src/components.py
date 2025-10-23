@@ -529,15 +529,15 @@ class GraphSearchQueryToolbar(Component):
                 t.i(classes=["bi", "bi-search"])
                 t(" Run query")
 
-    def search_bluecore(self, event):
+    async def search_bluecore(self, event):
         """
         Handle AI search/chat button click.
 
         Args:
             event: The click event
         """
-        # TODO: Implement AI search and chat functionality
-        pass
+        from bluecore_api import search_bluecore as api_search_bluecore
+        await api_search_bluecore(event)
 
     def run_query(self, event):
         """
@@ -671,6 +671,15 @@ class Navbar(Component):
     - User login management
     """
 
+    # Redraw when the bluecore_env state changes
+    redraw_on_app_state_changes = ["bluecore_env"]
+
+    @property
+    def bluecore_env_label(self):
+        """Get the Blue Core environment label."""
+        env = self.application.state.get("bluecore_env")
+        return f"for {env}" if env else ""
+
     def populate(self):
         with t.div(classes=["editor-navbar", "rounded-2"]):
             # Menubar section
@@ -678,7 +687,7 @@ class Navbar(Component):
                 with t.div(classes=["container-fluid"]):
                     with t.a(classes=["navbar-brand"], href="#"):
                         t("Graph Toolbox ")
-                        t.span(id="bluecore-env-label")
+                        t.span(self.bluecore_env_label, id="bluecore-env-label")
 
                     with t.button(
                         classes=["navbar-toggler"],
@@ -945,8 +954,15 @@ class Navbar(Component):
             event: The click event
             env_url: The environment URL to set
         """
-        # TODO: Implement environment setting logic
-        pass
+        from js import sessionStorage
+
+        self.application.state["bluecore_env"] = env_url
+
+        # Clear session storage for authentication tokens
+        sessionStorage.removeItem("keycloak_access_token")
+        sessionStorage.removeItem("keycloak_access_expires")
+        sessionStorage.removeItem("keycloak_refresh_token")
+        sessionStorage.removeItem("keycloak_refresh_expires")
 
     def download_graph(self, event, serialization):
         """

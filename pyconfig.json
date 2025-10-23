@@ -15,6 +15,7 @@
   "files": {
     "./shacl/v0.2.0-all.ttl": "./shacl/all.ttl",
     "./src/helpers.py": "./helpers.py",
+    "./src/app.py": "./app.py",
     "./src/bluecore_api.py": "./bluecore_api.py",
     "./src/load_rdf.py": "./load_rdf.py",
     "./src/marc.py": "./marc.py",
