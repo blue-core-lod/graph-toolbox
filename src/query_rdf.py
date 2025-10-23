@@ -102,11 +102,11 @@ async def run_query(*args):
 
 
 async def run_summary_query(event):
-    data_query = getattr(event.target.attributes, 'data-query')
+    data_query = getattr(event.target.attributes, "data-query")
 
     match data_query.value:
         case "all":
-            sparql_query =  """SELECT ?subject ?predicate ?object WHERE { ?subject ?predicate ?object . }"""
+            sparql_query = """SELECT ?subject ?predicate ?object WHERE { ?subject ?predicate ?object . }"""
 
         case "object":
             sparql_query = """SELECT DISTINCT ?object WHERE { ?s ?p ?object . }"""
@@ -117,12 +117,8 @@ async def run_summary_query(event):
         case "subject":
             sparql_query = """SELECT DISTINCT ?subject WHERE { ?subject ?p ?o . }"""
 
-          
     bibframe_sparql("bf-sparql-query")
     query_element = js.document.getElementById("bf-sparql-query")
     query_element.innerHTML = f"{query_element.innerHTML}\n{sparql_query}"
     run_query_btn = js.document.getElementById("run-query-btn")
     run_query_btn.click()
-
-
-    

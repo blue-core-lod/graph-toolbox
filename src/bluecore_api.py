@@ -10,6 +10,7 @@ from state import BLUECORE_ENV, BF_GRAPH
 
 BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
 
+
 def _expires_at(seconds: int) -> str:
     now = datetime.now(UTC)
     expires = now + timedelta(seconds=seconds)
@@ -20,27 +21,29 @@ def _add_search_item(item: dict):
     alert = document.createElement("div")
     for class_ in ["alert", "alert-info", "alert-dismissible", "fade", "show"]:
         alert.classList.add(class_)
-    uri = item.get('uri')
+    uri = item.get("uri")
     graph = rdflib.Graph()
-    graph.parse(data=item.get('data'), format='json-ld')
-    title_query = graph.query("""
+    graph.parse(data=item.get("data"), format="json-ld")
+    title_query = graph.query(
+        """
     SELECT ?mainTitle
     WHERE {
         ?title a bf:Title .
         ?title bf:mainTitle ?mainTitle . 
     }   
     """,
-    initNs={"bf": BF})
+        initNs={"bf": BF},
+    )
     main_titles = [main_title[0] for main_title in title_query]
     alert.innerHTML = f"""<strong class="text-primary">Blue Core Resource</strong>
-    <small>{item.get('type').title()}</small>
-    <h3>{'\n'.join(main_titles)}</h3>
+    <small>{item.get("type").title()}</small>
+    <h3>{"\n".join(main_titles)}</h3>
     <p>
       <a href="{uri}">{uri}</a>
     </p>
-    <textarea class="d-none" id="{uri}-rdf">{graph.serialize(format='json-ld')}</textarea>
+    <textarea class="d-none" id="{uri}-rdf">{graph.serialize(format="json-ld")}</textarea>
     <button type="button" class="btn btn-success"
-            data-uri="{item.get('uri')}" py-click="load_uri">Load</button>
+            data-uri="{item.get("uri")}" py-click="load_uri">Load</button>
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     """
     return alert
@@ -54,16 +57,16 @@ async def _get_keycloak_token():
     keycloak_username = user_element.value
     user_password = document.getElementById("keycloak_password")
     keycloak_password = user_password.value
-    form_bytes = bytes(f"client_id=bluecore_api&username={keycloak_username}&password={keycloak_password}&grant_type=password",
-                       encoding='utf-8')
+    form_bytes = bytes(
+        f"client_id=bluecore_api&username={keycloak_username}&password={keycloak_password}&grant_type=password",
+        encoding="utf-8",
+    )
     try:
         token_request = await pyfetch(
             f"{BLUECORE_ENV}/keycloak/realms/bluecore/protocol/openid-connect/token",
-            method = "POST",
-            headers={
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body=form_bytes
+            method="POST",
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            body=form_bytes,
         )
         if token_request.ok:
             token_result = await token_request.json()
@@ -75,8 +78,7 @@ async def _get_keycloak_token():
     except AbortError as e:
         alert(f"Error! {e}")
         return
-    
-    
+
 
 async def bluecore_login(event):
     close_btn = document.getElementById("loginModalhModalCloseBtn")
@@ -85,9 +87,13 @@ async def bluecore_login(event):
         close_btn.click()
         return
     sessionStorage.setItem("keycloak_access_token", tokens.get("access_token"))
-    sessionStorage.setItem("keycloak_access_expires", _expires_at(tokens.get("expires_in")))
+    sessionStorage.setItem(
+        "keycloak_access_expires", _expires_at(tokens.get("expires_in"))
+    )
     sessionStorage.setItem("keycloak_refresh_token", tokens.get("refresh_token"))
-    sessionStorage.setItem("keycloak_refresh_expires", _expires_at(tokens.get('refresh_expires_in')))
+    sessionStorage.setItem(
+        "keycloak_refresh_expires", _expires_at(tokens.get("refresh_expires_in"))
+    )
     close_btn.click()
 
 
@@ -103,21 +109,19 @@ async def save_bluecore(event):
         return
     access_token = sessionStorage.getItem("keycloak_access_token")
     form_data = FormData.new()
-    
-    bf_upload_file = File.new([BF_GRAPH.serialize(format='json-ld')],
-                              "upload",
-                              { "type": "text/plain"})
-    form_data.append('file', bf_upload_file)
+
+    bf_upload_file = File.new(
+        [BF_GRAPH.serialize(format="json-ld")], "upload", {"type": "text/plain"}
+    )
+    form_data.append("file", bf_upload_file)
     bench_heading = document.getElementById("bench-heading")
     bench_bc_result = document.getElementById("bc-results")
     bench_bc_result.innerHTML = ""
     batch_result = await pyfetch(
         f"{BLUECORE_ENV}/api/batches/upload/",
         method="POST",
-        headers={
-            "Authorization": f"Bearer {access_token}"
-        },
-        body=form_data
+        headers={"Authorization": f"Bearer {access_token}"},
+        body=form_data,
     )
     if batch_result.ok:
         bench_heading.innerHTML = "Saving Graph to Blue Core API"
@@ -143,15 +147,17 @@ async def search_bluecore(event):
     for class_ in ["active", "show"]:
         bench_bc_results.classList.add(class_)
     bench_bc_results.innerHTML = ""
-    search_url = f"{BLUECORE_ENV}/api/search?" + urlencode({ "q": query_elem.value })
+    search_url = f"{BLUECORE_ENV}/api/search?" + urlencode({"q": query_elem.value})
     search_result = await pyfetch(search_url)
     if search_result.ok:
         search_result_json = await search_result.json()
-        total_results = int(search_result_json.get('total', 0))
+        total_results = int(search_result_json.get("total", 0))
         if total_results < 1:
             bench_heading.innerHTML = """<h3>No results from Blue Core</h3>"""
         else:
-            bench_heading.innerHTML = f"""<h3>{total_results:,} results from Blue Core</h3>"""
+            bench_heading.innerHTML = (
+                f"""<h3>{total_results:,} results from Blue Core</h3>"""
+            )
 
         div_query = document.createElement("div")
         div_query.innerHTML = f"""<strong>Query:</strong><p>{query_elem.value}</p>"""
@@ -159,7 +165,6 @@ async def search_bluecore(event):
         for item in search_result_json.get("results", []):
             alert = _add_search_item(item)
             bench_bc_results.append(alert)
-        
 
 
 async def set_environment(this):

@@ -50,7 +50,7 @@ class GraphInfoToolbar(Component):
         if not self.bf_graph:
             return 0
         works_result = self.bf_graph.query(
-        """
+            """
         PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
@@ -58,7 +58,9 @@ class GraphInfoToolbar(Component):
         WHERE { ?s rdf:type bf:Work . }
         """
         )
-        return works_result.bindings[0]["workCount"].value if works_result.bindings else 0
+        return (
+            works_result.bindings[0]["workCount"].value if works_result.bindings else 0
+        )
 
     @property
     def bf_instances_count(self):
@@ -66,7 +68,7 @@ class GraphInfoToolbar(Component):
         if not self.bf_graph:
             return 0
         instances_result = self.bf_graph.query(
-        """
+            """
         PREFIX bf: <http://id.loc.gov/ontologies/bibframe/>
         PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
@@ -74,79 +76,141 @@ class GraphInfoToolbar(Component):
         WHERE { ?s rdf:type bf:Instance . }
         """
         )
-        return instances_result.bindings[0]["instanceCount"].value if instances_result.bindings else 0
+        return (
+            instances_result.bindings[0]["instanceCount"].value
+            if instances_result.bindings
+            else 0
+        )
 
     def populate(self):
         with t.div(classes=["container"]):
             with t.div(classes=["row", "bg-secondary-subtle", "rounded-2", "mb-2"]):
                 # Title section
-                with t.div(classes=["col-2", "d-flex", "flex-grow-1", "justify-content-center", "align-items-center"]):
+                with t.div(
+                    classes=[
+                        "col-2",
+                        "d-flex",
+                        "flex-grow-1",
+                        "justify-content-center",
+                        "align-items-center",
+                    ]
+                ):
                     t.h5("Graph Summary")
 
                 # Summary buttons section
-                with t.div(classes=["col-6", "d-flex", "flex-grow-1", "justify-content-center", "align-items-center"]):
-                    with t.div(class_name="btn-group", role="group", aria_label="Graph Summary Button Group"):
+                with t.div(
+                    classes=[
+                        "col-6",
+                        "d-flex",
+                        "flex-grow-1",
+                        "justify-content-center",
+                        "align-items-center",
+                    ]
+                ):
+                    with t.div(
+                        class_name="btn-group",
+                        role="group",
+                        aria_label="Graph Summary Button Group",
+                    ):
                         # Total Triples button
                         with t.button(
                             type="button",
                             classes=["btn", "btn-success"],
-                            on_click=lambda event: self.on_run_summary_query(event, "all")
+                            on_click=lambda event: self.on_run_summary_query(
+                                event, "all"
+                            ),
                         ):
                             t("Total Triples")
                             t(" ")
-                            t.span(str(self.total_triples), classes=["badge", "text-bg-secondary"])
+                            t.span(
+                                str(self.total_triples),
+                                classes=["badge", "text-bg-secondary"],
+                            )
 
                         # Subjects button
                         with t.button(
                             type="button",
                             classes=["btn", "btn-info"],
-                            on_click=lambda event: self.on_run_summary_query(event, "subject")
+                            on_click=lambda event: self.on_run_summary_query(
+                                event, "subject"
+                            ),
                         ):
                             t("Subjects")
                             t(" ")
-                            t.span(str(self.subjects_count), classes=["badge", "text-bg-secondary"])
+                            t.span(
+                                str(self.subjects_count),
+                                classes=["badge", "text-bg-secondary"],
+                            )
 
                         # Predicates button
                         with t.button(
                             type="button",
                             classes=["btn", "btn-primary"],
-                            on_click=lambda event: self.on_run_summary_query(event, "predicate")
+                            on_click=lambda event: self.on_run_summary_query(
+                                event, "predicate"
+                            ),
                         ):
                             t("Predicates")
                             t(" ")
-                            t.span(str(self.predicates_count), classes=["badge", "text-bg-secondary"])
+                            t.span(
+                                str(self.predicates_count),
+                                classes=["badge", "text-bg-secondary"],
+                            )
 
                         # Objects button
                         with t.button(
                             type="button",
                             classes=["btn", "btn-info"],
-                            on_click=lambda event: self.on_run_summary_query(event, "object")
+                            on_click=lambda event: self.on_run_summary_query(
+                                event, "object"
+                            ),
                         ):
                             t("Objects")
                             t(" ")
-                            t.span(str(self.objects_count), classes=["badge", "text-bg-secondary"])
+                            t.span(
+                                str(self.objects_count),
+                                classes=["badge", "text-bg-secondary"],
+                            )
 
                 # BF Works/Instances counts section
                 with t.div(classes=["col-2"]):
                     with t.ul():
                         with t.li():
                             t("BF Works: ")
-                            t.span(str(self.bf_works_count), classes=["badge", "text-bg-secondary"])
+                            t.span(
+                                str(self.bf_works_count),
+                                classes=["badge", "text-bg-secondary"],
+                            )
                         with t.li():
                             t("BF Instances: ")
-                            t.span(str(self.bf_instances_count), classes=["badge", "text-bg-secondary"])
+                            t.span(
+                                str(self.bf_instances_count),
+                                classes=["badge", "text-bg-secondary"],
+                            )
 
                 # Action buttons section
-                with t.div(classes=["col-2", "d-flex", "flex-grow-1", "justify-content-center", "align-items-center"]):
+                with t.div(
+                    classes=[
+                        "col-2",
+                        "d-flex",
+                        "flex-grow-1",
+                        "justify-content-center",
+                        "align-items-center",
+                    ]
+                ):
                     with t.div(classes=["btn-group"], role="group"):
                         # Bulk Updates button
                         with t.button(
                             type="button",
                             classes=["btn", "btn-warning"],
                             data_bs_toggle="modal",
-                            data_bs_target="#bulk-modal"
+                            data_bs_target="#bulk-modal",
                         ):
-                            t.i(classes=["bi", "bi-files"], data_bs_toggle="tooltip", data_bs_title="Bulk Updates")
+                            t.i(
+                                classes=["bi", "bi-files"],
+                                data_bs_toggle="tooltip",
+                                data_bs_title="Bulk Updates",
+                            )
 
                         # Save to Blue Core button
                         with t.button(
@@ -154,7 +218,7 @@ class GraphInfoToolbar(Component):
                             classes=["btn", "btn-warning"],
                             on_click=self.on_save_bluecore,
                             data_bs_toggle="tooltip",
-                            data_bs_title="Save Entities to Blue Core"
+                            data_bs_title="Save Entities to Blue Core",
                         ):
                             t.i(classes=["bi", "bi-floppy"])
 
@@ -169,7 +233,6 @@ class GraphInfoToolbar(Component):
         # TODO: Implement query logic
         # This should query the RDF graph and update the corresponding count
         pass
-
 
     def on_save_bluecore(self, event):
         """
@@ -201,18 +264,22 @@ class GraphOpsToolbar(Component):
             with t.div(classes=["d-grid", "mb-2"]):
                 with t.div(classes=["text-center", "fw-semibold"]):
                     t("Import")
-                with t.div(classes=["btn-group-vertical"], role="group", aria_label="Import button group"):
+                with t.div(
+                    classes=["btn-group-vertical"],
+                    role="group",
+                    aria_label="Import button group",
+                ):
                     # Load URLs button
                     with t.button(
                         type="button",
                         classes=["btn", "btn-info", "btn-lg"],
                         data_bs_toggle="modal",
-                        data_bs_target="#urls-modal"
+                        data_bs_target="#urls-modal",
                     ):
                         t.i(
                             classes=["bi", "bi-window-stack"],
                             data_bs_toggle="tooltip",
-                            data_bs_title="Load URLs"
+                            data_bs_title="Load URLs",
                         )
 
                     # Load CBDs button
@@ -220,12 +287,12 @@ class GraphOpsToolbar(Component):
                         type="button",
                         classes=["btn", "btn-info", "btn-lg"],
                         data_bs_toggle="modal",
-                        data_bs_target="#cbd-modal"
+                        data_bs_target="#cbd-modal",
                     ):
                         t.i(
                             classes=["bi", "bi-box-seam"],
                             data_bs_toggle="tooltip",
-                            data_bs_title="Load Constrained Bound Descriptions (CBDs)"
+                            data_bs_title="Load Constrained Bound Descriptions (CBDs)",
                         )
 
                     # Load MARC file button
@@ -233,21 +300,25 @@ class GraphOpsToolbar(Component):
                         type="button",
                         classes=["btn", "btn-info", "btn-lg"],
                         data_bs_toggle="modal",
-                        data_bs_target="#marc21-import-modal"
+                        data_bs_target="#marc21-import-modal",
                     ):
                         t.img(
                             src="static/img/marc21h2.gif",
                             width="32px",
                             height="32px",
                             data_bs_toggle="tooltip",
-                            data_bs_title="Load MARC file"
+                            data_bs_title="Load MARC file",
                         )
 
             # Export section
             with t.div(classes=["d-grid", "mb-2"]):
                 with t.div(classes=["text-center", "fw-semibold"]):
                     t("Export")
-                with t.div(classes=["btn-group-vertical"], role="group", aria_label="Export button group"):
+                with t.div(
+                    classes=["btn-group-vertical"],
+                    role="group",
+                    aria_label="Export button group",
+                ):
                     # RDF download dropdown
                     with t.div(classes=["btn-group"], role="group"):
                         with t.button(
@@ -255,20 +326,23 @@ class GraphOpsToolbar(Component):
                             type="button",
                             data_bs_toggle="dropdown",
                             id="rdf-download-file",
-                            aria_expanded="false"
+                            aria_expanded="false",
                         ):
                             t.i(
                                 classes=["bi", "bi-cloud-download"],
                                 data_bs_toggle="tooltip",
-                                data_bs_title="Download RDF"
+                                data_bs_title="Download RDF",
                             )
 
-                        with t.ul(classes=["dropdown-menu"], aria_labelledby="rdf-download-file"):
+                        with t.ul(
+                            classes=["dropdown-menu"],
+                            aria_labelledby="rdf-download-file",
+                        ):
                             with t.li():
                                 with t.a(
                                     classes=["dropdown-item"],
                                     href="#",
-                                    on_click=lambda e: self.download_graph(e, "ttl")
+                                    on_click=lambda e: self.download_graph(e, "ttl"),
                                 ):
                                     t("Turtle (.ttl)")
 
@@ -276,7 +350,7 @@ class GraphOpsToolbar(Component):
                                 with t.a(
                                     classes=["dropdown-item"],
                                     href="#",
-                                    on_click=lambda e: self.download_graph(e, "xml")
+                                    on_click=lambda e: self.download_graph(e, "xml"),
                                 ):
                                     t.i(classes=["bi", "bi-filetype-xml"])
                                     t(" XML (.rdf)")
@@ -285,7 +359,9 @@ class GraphOpsToolbar(Component):
                                 with t.a(
                                     classes=["dropdown-item"],
                                     href="#",
-                                    on_click=lambda e: self.download_graph(e, "json-ld")
+                                    on_click=lambda e: self.download_graph(
+                                        e, "json-ld"
+                                    ),
                                 ):
                                     t.i(classes=["bi", "bi-filetype-json"])
                                     t(" JSON-LD (.json)")
@@ -294,7 +370,7 @@ class GraphOpsToolbar(Component):
                                 with t.a(
                                     classes=["dropdown-item"],
                                     href="#",
-                                    on_click=lambda e: self.download_graph(e, "nt")
+                                    on_click=lambda e: self.download_graph(e, "nt"),
                                 ):
                                     t("N3 (.nt)")
 
@@ -303,25 +379,28 @@ class GraphOpsToolbar(Component):
                         type="button",
                         classes=["btn", "btn-success", "btn-lg"],
                         data_bs_toggle="modal",
-                        data_bs_target="#marc21-export-modal"
+                        data_bs_target="#marc21-export-modal",
                     ):
                         t.img(
                             src="static/img/marc21h2.gif",
                             width="32px",
                             height="32px",
                             data_bs_toggle="tooltip",
-                            data_bs_title="Download MARC file"
+                            data_bs_title="Download MARC file",
                         )
 
             # Utilities section
             with t.div(classes=["d-grid", "mb-2"]):
                 with t.div(classes=["text-center", "fw-semibold"]):
                     t("Utilities")
-                with t.div(classes=["btn-group-vertical"], role="group", aria_label="Utilities button group"):
+                with t.div(
+                    classes=["btn-group-vertical"],
+                    role="group",
+                    aria_label="Utilities button group",
+                ):
                     # SHACL validation button
                     with t.button(
-                        classes=["btn", "btn-light", "btn-lg"],
-                        on_click=self.validate
+                        classes=["btn", "btn-light", "btn-lg"], on_click=self.validate
                     ):
                         t.i(
                             classes=["bi", "bi-check2-all"],
@@ -329,13 +408,13 @@ class GraphOpsToolbar(Component):
                             width="32px",
                             height="32px",
                             data_bs_toggle="tooltip",
-                            data_bs_title="Validate Graph with BIG SHACL"
+                            data_bs_title="Validate Graph with BIG SHACL",
                         )
 
                     # Python REPL button
                     with t.button(
                         classes=["btn", "btn-light", "btn-lg"],
-                        on_click=self.open_py_repl
+                        on_click=self.open_py_repl,
                     ):
                         t.img(
                             src="static/img/python-repl.svg",
@@ -343,7 +422,7 @@ class GraphOpsToolbar(Component):
                             width="32px",
                             height="32px",
                             data_bs_toggle="tooltip",
-                            data_bs_title="Open Python REPL"
+                            data_bs_title="Open Python REPL",
                         )
 
     def download_graph(self, event, serialization):
@@ -398,7 +477,7 @@ class GraphSearchQueryToolbar(Component):
                     with t.button(
                         classes=["btn", "float-end"],
                         data_bs_toggle="modal",
-                        data_bs_target="#ai-assistance-modal"
+                        data_bs_target="#ai-assistance-modal",
                     ):
                         t.i(classes=["bi", "bi-arrows-fullscreen"])
 
@@ -415,18 +494,16 @@ class GraphSearchQueryToolbar(Component):
                         t(".")
 
                     with t.li():
-                        t("Get help constructing SPARQL queries to apply to the loaded graph")
+                        t(
+                            "Get help constructing SPARQL queries to apply to the loaded graph"
+                        )
 
-                t.textarea(
-                    classes=["form-control"],
-                    id="ai-search-resources",
-                    rows=10
-                )
+                t.textarea(classes=["form-control"], id="ai-search-resources", rows=10)
 
                 with t.button(
                     id="sparql-chat",
                     classes=["btn", "btn-success", "m-1", "d-block", "mx-auto"],
-                    on_click=self.search_bluecore
+                    on_click=self.search_bluecore,
                 ):
                     t.i(classes=["bi", "bi-chat-left-dots"])
                     t(" Chat")
@@ -438,20 +515,16 @@ class GraphSearchQueryToolbar(Component):
                 with t.button(
                     classes=["btn", "float-end"],
                     data_bs_toggle="modal",
-                    data_bs_target="#sparql-modal"
+                    data_bs_target="#sparql-modal",
                 ):
                     t.i(classes=["bi", "bi-arrows-fullscreen"])
 
-            t.textarea(
-                classes=["form-control"],
-                id="bf-sparql-query",
-                rows=10
-            )
+            t.textarea(classes=["form-control"], id="bf-sparql-query", rows=10)
 
             with t.button(
                 classes=["btn", "btn-primary", "m-1", "d-block", "mx-auto"],
                 id="run-query-btn",
-                on_click=self.run_query
+                on_click=self.run_query,
             ):
                 t.i(classes=["bi", "bi-search"])
                 t(" Run query")
@@ -491,20 +564,28 @@ class GraphWorkBench(Component):
     """
 
     def populate(self):
-        with t.div(classes=["h-100", "border", "rounded", "bg-light", "border-secondary-subtle", "m-1", "p-1"]):
+        with t.div(
+            classes=[
+                "h-100",
+                "border",
+                "rounded",
+                "bg-light",
+                "border-secondary-subtle",
+                "m-1",
+                "p-1",
+            ]
+        ):
             t.h2("Welcome to the Graph Toolbox!", id="bench-heading")
 
             # Nav tabs
             with t.ul(
-                classes=["nav", "nav-tabs"],
-                id="workbench-tablist",
-                role="tablist"
+                classes=["nav", "nav-tabs"], id="workbench-tablist", role="tablist"
             ):
                 # Search Results tab
                 with t.li(
                     classes=["nav-item", "d-none"],
                     role="presentation",
-                    id="search-results-tab"
+                    id="search-results-tab",
                 ):
                     with t.button(
                         classes=["nav-link"],
@@ -514,7 +595,7 @@ class GraphWorkBench(Component):
                         type="button",
                         role="tab",
                         aria_controls="search-results",
-                        aria_selected="false"
+                        aria_selected="false",
                     ):
                         t("Search Results")
 
@@ -522,7 +603,7 @@ class GraphWorkBench(Component):
                 with t.li(
                     classes=["nav-item", "d-none"],
                     role="presentation",
-                    id="bf-sparql-results-tab"
+                    id="bf-sparql-results-tab",
                 ):
                     with t.button(
                         classes=["nav-link"],
@@ -532,7 +613,7 @@ class GraphWorkBench(Component):
                         type="button",
                         role="tab",
                         aria_controls="bf-sparql-results",
-                        aria_selected="false"
+                        aria_selected="false",
                     ):
                         t("SPARQL Results")
 
@@ -540,7 +621,7 @@ class GraphWorkBench(Component):
                 with t.li(
                     classes=["nav-item", "d-none"],
                     role="presentation",
-                    id="bf-validation-results-tab"
+                    id="bf-validation-results-tab",
                 ):
                     with t.button(
                         classes=["nav-link"],
@@ -550,7 +631,7 @@ class GraphWorkBench(Component):
                         type="button",
                         role="tab",
                         aria_controls="bf-validation-results",
-                        aria_selected="false"
+                        aria_selected="false",
                     ):
                         t("SHACL Results")
 
@@ -558,8 +639,7 @@ class GraphWorkBench(Component):
             with t.div(classes=["tab-content"], id="work-bench-tab-content"):
                 # Search results pane
                 t.div(
-                    id="search-results",
-                    classes=["tab-pane", "fade", "overflow-auto"]
+                    id="search-results", classes=["tab-pane", "fade", "overflow-auto"]
                 )
 
                 # SPARQL results pane
@@ -567,7 +647,7 @@ class GraphWorkBench(Component):
                     id="bf-sparql-results",
                     classes=["tab-pane", "fade", "overflow-auto"],
                     aria_labelledby="bf-sparql-results-tab-btn",
-                    tabindex="0"
+                    tabindex="0",
                 )
 
                 # Validation results pane
@@ -575,7 +655,7 @@ class GraphWorkBench(Component):
                     id="bf-validation-results",
                     classes=["tab-pane", "fade", "overflow-auto"],
                     aria_labelledby="",
-                    tabindex="0"
+                    tabindex="0",
                 )
 
 
@@ -607,11 +687,14 @@ class Navbar(Component):
                         data_bs_target="#navbarSupportedContent",
                         aria_controls="navbarSupportedContent",
                         aria_expanded="false",
-                        aria_label="Toggle navigation"
+                        aria_label="Toggle navigation",
                     ):
                         t.span(classes=["navbar-toggler-icon"])
 
-                    with t.div(classes=["collapse", "navbar-collapse"], id="navbarSupportedContent"):
+                    with t.div(
+                        classes=["collapse", "navbar-collapse"],
+                        id="navbarSupportedContent",
+                    ):
                         with t.ul(classes=["navbar-nav", "me-auto", "mb-2", "mb-lg-0"]):
                             # Blue Core dropdown
                             with t.li(classes=["nav-item", "dropdown"]):
@@ -620,7 +703,7 @@ class Navbar(Component):
                                     href="#",
                                     role="button",
                                     data_bs_toggle="dropdown",
-                                    aria_expanded="false"
+                                    aria_expanded="false",
                                 ):
                                     t("Blue Core")
 
@@ -629,7 +712,7 @@ class Navbar(Component):
                                         with t.a(
                                             classes=["dropdown-item"],
                                             href="#",
-                                            on_click=self.validate
+                                            on_click=self.validate,
                                         ):
                                             t.i(classes=["bi", "bi-check2-all"])
                                             t(" Validate w/BIG SHACL")
@@ -638,7 +721,7 @@ class Navbar(Component):
                                         with t.a(
                                             classes=["dropdown-item"],
                                             href="#",
-                                            on_click=self.save_bluecore
+                                            on_click=self.save_bluecore,
                                         ):
                                             t.i(classes=["bi", "bi-floppy"])
                                             t(" Save")
@@ -648,7 +731,7 @@ class Navbar(Component):
                                             classes=["dropdown-item"],
                                             href="#",
                                             data_bs_toggle="modal",
-                                            data_bs_target="#bulk-modal"
+                                            data_bs_target="#bulk-modal",
                                         ):
                                             t.i(classes=["bi", "bi-files"])
                                             t(" Bulk Updates")
@@ -660,7 +743,7 @@ class Navbar(Component):
                                     href="#",
                                     role="button",
                                     data_bs_toggle="dropdown",
-                                    aria_expanded="false"
+                                    aria_expanded="false",
                                 ):
                                     t("Environment")
 
@@ -668,14 +751,18 @@ class Navbar(Component):
                                     with t.a(
                                         classes=["dropdown-item"],
                                         href="#",
-                                        on_click=lambda e: self.set_environment(e, "http://localhost")
+                                        on_click=lambda e: self.set_environment(
+                                            e, "http://localhost"
+                                        ),
                                     ):
                                         t("Local")
 
                                     with t.a(
                                         classes=["dropdown-item"],
                                         href="#",
-                                        on_click=lambda e: self.set_environment(e, "https://dev.bcld.info")
+                                        on_click=lambda e: self.set_environment(
+                                            e, "https://dev.bcld.info"
+                                        ),
                                     ):
                                         t("dev.bcld.info")
 
@@ -683,7 +770,9 @@ class Navbar(Component):
                                         classes=["dropdown-item", "disabled"],
                                         href="#",
                                         aria_disabled="true",
-                                        on_click=lambda e: self.set_environment(e, "https://bcld.info")
+                                        on_click=lambda e: self.set_environment(
+                                            e, "https://bcld.info"
+                                        ),
                                     ):
                                         t("bcld.info")
 
@@ -694,7 +783,7 @@ class Navbar(Component):
                                     href="#",
                                     role="button",
                                     data_bs_toggle="dropdown",
-                                    aria_expanded="false"
+                                    aria_expanded="false",
                                 ):
                                     t("Import")
 
@@ -704,7 +793,7 @@ class Navbar(Component):
                                             classes=["dropdown-item"],
                                             href="#",
                                             data_bs_toggle="modal",
-                                            data_bs_target="#urls-modal"
+                                            data_bs_target="#urls-modal",
                                         ):
                                             t.i(classes=["bi", "bi-window-stack"])
                                             t(" Individual URLs")
@@ -714,7 +803,7 @@ class Navbar(Component):
                                             classes=["dropdown-item"],
                                             href="#",
                                             data_bs_toggle="modal",
-                                            data_bs_target="#cbd-modal"
+                                            data_bs_target="#cbd-modal",
                                         ):
                                             t.i(classes=["bi", "bi-box-seam"])
                                             t(" Constrained Bound Descriptions (CBDs)")
@@ -724,12 +813,12 @@ class Navbar(Component):
                                             classes=["dropdown-item"],
                                             href="#",
                                             data_bs_toggle="modal",
-                                            data_bs_target="#marc21-import-modal"
+                                            data_bs_target="#marc21-import-modal",
                                         ):
                                             t.img(
                                                 src="static/img/marc21h2.gif",
                                                 width="16px",
-                                                height="16px"
+                                                height="16px",
                                             )
                                             t(" MARC Record")
 
@@ -740,7 +829,7 @@ class Navbar(Component):
                                     href="#",
                                     role="button",
                                     data_bs_toggle="dropdown",
-                                    aria_expanded="false"
+                                    aria_expanded="false",
                                 ):
                                     t("Export")
 
@@ -750,12 +839,12 @@ class Navbar(Component):
                                             classes=["dropdown-item"],
                                             href="#",
                                             data_bs_toggle="modal",
-                                            data_bs_target="#marc21-export-modal"
+                                            data_bs_target="#marc21-export-modal",
                                         ):
                                             t.img(
                                                 src="static/img/marc21h2.gif",
                                                 width="16px",
-                                                height="16px"
+                                                height="16px",
                                             )
                                             t(" MARC Record")
 
@@ -763,7 +852,9 @@ class Navbar(Component):
                                         with t.a(
                                             classes=["dropdown-item"],
                                             href="#",
-                                            on_click=lambda e: self.download_graph(e, "ttl")
+                                            on_click=lambda e: self.download_graph(
+                                                e, "ttl"
+                                            ),
                                         ):
                                             t("Turtle (.ttl)")
 
@@ -771,7 +862,9 @@ class Navbar(Component):
                                         with t.a(
                                             classes=["dropdown-item"],
                                             href="#",
-                                            on_click=lambda e: self.download_graph(e, "xml")
+                                            on_click=lambda e: self.download_graph(
+                                                e, "xml"
+                                            ),
                                         ):
                                             t.i(classes=["bi", "bi-filetype-xml"])
                                             t(" RDF XML")
@@ -780,7 +873,9 @@ class Navbar(Component):
                                         with t.a(
                                             classes=["dropdown-item"],
                                             href="#",
-                                            on_click=lambda e: self.download_graph(e, "json-ld")
+                                            on_click=lambda e: self.download_graph(
+                                                e, "json-ld"
+                                            ),
                                         ):
                                             t.i(classes=["bi", "bi-filetype-json"])
                                             t(" JSON-LD")
@@ -789,7 +884,9 @@ class Navbar(Component):
                                         with t.a(
                                             classes=["dropdown-item"],
                                             href="#",
-                                            on_click=lambda e: self.download_graph(e, "nt")
+                                            on_click=lambda e: self.download_graph(
+                                                e, "nt"
+                                            ),
                                         ):
                                             t("N3 (.nt)")
 
@@ -799,7 +896,7 @@ class Navbar(Component):
                             with t.button(
                                 classes=["btn", "btn-primary", "mt-1"],
                                 data_bs_toggle="modal",
-                                data_bs_target="#loginModal"
+                                data_bs_target="#loginModal",
                             ):
                                 with t.span(id="login-action"):
                                     t.i(classes=["bi", "bi-box-arrow-in-right"])
@@ -811,7 +908,7 @@ class Navbar(Component):
                         src="static/img/blue-core-v1.svg",
                         classes=["float-start"],
                         alt="Blue Core Label",
-                        style="height: 100px"
+                        style="height: 100px",
                     )
 
                 with t.div(classes=["col-7"]):
@@ -886,15 +983,12 @@ class AppFooter(Component):
                     href="http://creativecommons.org/licenses/by/4.0/?ref=chooser-v1",
                     target="_blank",
                     rel="license noopener noreferrer",
-                    style="display:inline-block;"
+                    style="display:inline-block;",
                 )
                 t(". Source code licensed under ")
-                t.a(
-                    "Apache 2",
-                    href="http://www.apache.org/licenses/LICENSE-2.0"
-                )
+                t.a("Apache 2", href="http://www.apache.org/licenses/LICENSE-2.0")
                 t(" and available at ")
                 t.a(
                     "https://github.com/blue-core-lod/graph-explorer",
-                    href="https://github.com/blue-core-lod/graph-explorer"
+                    href="https://github.com/blue-core-lod/graph-explorer",
                 )

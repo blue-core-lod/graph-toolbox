@@ -2,8 +2,9 @@ import markdown
 import rdflib
 
 from js import document
-    
+
 BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
+
 
 def set_versions(version):
     version_element = document.getElementById("version")
@@ -18,6 +19,7 @@ async def render_markdown(element_id):
         return
     raw_mkdwn = element.innerText
     element.innerHTML = markdown.markdown(raw_mkdwn)
+
 
 async def py_repl(event):
     py_repl_div = document.getElementById("py-repl")
