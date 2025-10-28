@@ -109,7 +109,7 @@ async def save_bluecore(event):
                               { "type": "text/plain"})
     form_data.append('file', bf_upload_file)
     bench_heading = document.getElementById("bench-heading")
-    bench_bc_result = document.getElementById("bc-results")
+    bench_bc_result = document.getElementById("search-results")
     bench_bc_result.innerHTML = ""
     batch_result = await pyfetch(
         f"{BLUECORE_ENV}/api/batches/upload/",
