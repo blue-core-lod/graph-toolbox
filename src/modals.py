@@ -1,5 +1,6 @@
 from puepy import Component, t
 
+from bluecore_api import *
 
 @t.component()
 class AiAssistanceModal(Component):
@@ -224,6 +225,86 @@ class LoadModal(Component):
                             classes=["spinner-border", "text-secondary"], role="status"
                         ):
                             t.span("Loading...", classes=["visually-hidden"])
+
+@t.component()
+class LoginModal(Component):
+    """
+    Login modal component.
+
+    Provides Keycloak login interface for Blue Core authentication.
+    """
+
+    def encode_body(self):
+        form_bytes = bytes(
+            f"client_id=bluecore_api&username={keycloak_username}&password={keycloak_password}&grant_type=password",
+            encoding="utf-8",
+        )
+        return form_bytes
+
+    def populate(self):
+        with t.div(classes=["modal", "fade"], tabindex="-1", id="loginModal"):
+            with t.div(classes=["modal-dialog", "modal-fullscreen-sm-down"]):
+                with t.div(classes=["modal-content"]):
+                    # Header
+                    with t.div(classes=["modal-header"]):
+                        t.h5("Blue Core Keycloak Login", classes=["modal-title"])
+                        t.button(
+                            type="button",
+                            id="loginModalhModalCloseBtn",
+                            classes=["btn-close"],
+                            data_bs_dismiss="modal",
+                            aria_label="Close",
+                        )
+
+                    # Body
+                    with t.div(classes=["modal-body"]):
+                        # Username field
+                        with t.div(classes=["mb-3"]):
+                            t.label(
+                                "Username",
+                                for_="keycloak_username",
+                                classes=["form-label"],
+                            )
+                            t.input(
+                                type="text",
+                                classes=["form-control"],
+                                id="keycloak_username",
+                                placeholder="Enter Username",
+                            )
+
+                        # Password field
+                        with t.div(classes=["mb-3"]):
+                            t.label(
+                                "Password",
+                                for_="keycloak_password",
+                                classes=["form-label"],
+                            )
+                            t.input(
+                                type="password",
+                                classes=["form-control"],
+                                id="keycloak_password",
+                                placeholder="Enter password",
+                            )
+
+                    # Footer
+                    with t.div(classes=["modal-footer"]):
+                        t.button(
+                            "Close",
+                            type="button",
+                            classes=["btn", "btn-secondary"],
+                            data_bs_dismiss="modal",
+                        )
+                        t.button(
+                            "Login",
+                            type="button",
+                            classes=["btn", "btn-primary"],
+                            on_click=self.bluecore_login,
+                        )
+
+    def bluecore_login(self, event):
+        """Handle Blue Core login."""
+        # TODO: Implement Blue Core Keycloak login
+        pass
 
 
 @t.component()
@@ -473,75 +554,3 @@ class UrlsModal(Component):
         pass
 
 
-@t.component()
-class LoginModal(Component):
-    """
-    Login modal component.
-
-    Provides Keycloak login interface for Blue Core authentication.
-    """
-
-    def populate(self):
-        with t.div(classes=["modal", "fade"], tabindex="-1", id="loginModal"):
-            with t.div(classes=["modal-dialog", "modal-fullscreen-sm-down"]):
-                with t.div(classes=["modal-content"]):
-                    # Header
-                    with t.div(classes=["modal-header"]):
-                        t.h5("Blue Core Keycloak Login", classes=["modal-title"])
-                        t.button(
-                            type="button",
-                            id="loginModalhModalCloseBtn",
-                            classes=["btn-close"],
-                            data_bs_dismiss="modal",
-                            aria_label="Close",
-                        )
-
-                    # Body
-                    with t.div(classes=["modal-body"]):
-                        # Username field
-                        with t.div(classes=["mb-3"]):
-                            t.label(
-                                "Username",
-                                for_="keycloak_username",
-                                classes=["form-label"],
-                            )
-                            t.input(
-                                type="text",
-                                classes=["form-control"],
-                                id="keycloak_username",
-                                placeholder="Enter Username",
-                            )
-
-                        # Password field
-                        with t.div(classes=["mb-3"]):
-                            t.label(
-                                "Password",
-                                for_="keycloak_password",
-                                classes=["form-label"],
-                            )
-                            t.input(
-                                type="password",
-                                classes=["form-control"],
-                                id="keycloak_password",
-                                placeholder="Enter password",
-                            )
-
-                    # Footer
-                    with t.div(classes=["modal-footer"]):
-                        t.button(
-                            "Close",
-                            type="button",
-                            classes=["btn", "btn-secondary"],
-                            data_bs_dismiss="modal",
-                        )
-                        t.button(
-                            "Login",
-                            type="button",
-                            classes=["btn", "btn-primary"],
-                            on_click=self.bluecore_login,
-                        )
-
-    def bluecore_login(self, event):
-        """Handle Blue Core login."""
-        # TODO: Implement Blue Core Keycloak login
-        pass

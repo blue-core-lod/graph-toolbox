@@ -5,6 +5,7 @@ from puepy import Component, t, Prop
 
 from bluecore_api import save_bluecore as api_save_bluecore
 from bluecore_api import search_bluecore as api_search_bluecore
+from query_rdf import run_summary_query
 
 
 BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
@@ -239,9 +240,7 @@ class GraphInfoToolbar(Component):
             event: The click event
             query_type: Type of query ('all', 'subject', 'predicate', 'object')
         """
-        # TODO: Implement query logic
-        # This should query the RDF graph and update the corresponding count
-        pass
+        run_summary_query(query_type)
 
     async def on_save_bluecore(self, event):
         """

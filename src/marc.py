@@ -13,6 +13,7 @@ from load_rdf import summarize_graph
 def _get_app():
     """Get the app instance to access state."""
     from app import app
+
     return app
 
 

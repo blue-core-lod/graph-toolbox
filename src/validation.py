@@ -7,6 +7,7 @@ from js import console, document
 def _get_app():
     """Get the app instance to access state."""
     from app import app
+
     return app
 
 
@@ -37,6 +38,7 @@ async def validate(event):
 
     if not bf_graph:
         from js import alert
+
         alert("Graph not initialized. Please load data first.")
         return
 

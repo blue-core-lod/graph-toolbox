@@ -14,7 +14,9 @@ from jinja2 import Template
 def _get_app():
     """Get the app instance to access state."""
     from app import app
+
     return app
+
 
 query_results_template = Template(
     """<div class="w-100">
@@ -117,10 +119,9 @@ async def run_query(*args):
         output_element.content = f"""<h2>Query Error</h2><p>{e}</p>"""
 
 
-async def run_summary_query(event):
-    data_query = getattr(event.target.attributes, "data-query")
+def run_summary_query(query_type):
 
-    match data_query.value:
+    match query_type:
         case "all":
             sparql_query = """SELECT ?subject ?predicate ?object WHERE { ?subject ?predicate ?object . }"""
 
