@@ -158,7 +158,7 @@ sparql_template = Template(
 def bibframe_sparql(element_id: str):
     wrapper_div = js.document.getElementById(element_id)
     all_namespaces = NAMESPACES + [("rdf", rdflib.RDF), ("rdfs", rdflib.RDFS)]
-    wrapper_div.innerHTML = sparql_template.render(namespaces=all_namespaces)
+    wrapper_div.value = sparql_template.render(namespaces=all_namespaces)
 
 
 async def load_cbd_file(event):
