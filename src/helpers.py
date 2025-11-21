@@ -1,7 +1,7 @@
 import markdown
 import rdflib
 
-from js import document
+from js import console, document
     
 BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
 
@@ -25,3 +25,8 @@ async def py_repl(event):
         py_repl_div.classList.remove("d-none")
     else:
         py_repl_div.classList.add("d-none")
+
+async def remove_errors(class_name="py-error"):
+    py_errors = document.getElementsByClassName(class_name)
+    for element in py_errors:
+        element.parentNode.removeChild(element)
