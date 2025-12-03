@@ -90,8 +90,11 @@ async def download_query_results(event):
     js.document.body.removeChild(anchor)
 
 
-async def run_query(*args):
-    app = _get_app()
+async def run_query(*args, **kwargs):
+    app = kwargs.get("app")
+    if not app:
+        app = _get_app()
+    
     bf_graph = app.state.get("bf_graph")
 
     if not bf_graph:
@@ -110,11 +113,12 @@ async def run_query(*args):
     try:
         query = bf_graph.query(sparql_query)
         results_df = pd.DataFrame(query.bindings)
-        app.state["results_df"] = results_df
         output_element.innerHTML = query_results_template.render(
             vars=query.vars, results=query.bindings
         )
         bench_header.innerHTML = f"<h2>Query Results {len(query.bindings):,} Rows</h2>"
+        js.console.log("Finished processing")
+        app.state["results_df"] = results_df
     except Exception as e:
         output_element.content = f"""<h2>Query Error</h2><p>{e}</p>"""
 
@@ -136,6 +140,6 @@ def run_summary_query(query_type):
 
     bibframe_sparql("bf-sparql-query")
     query_element = js.document.getElementById("bf-sparql-query")
-    query_element.innerHTML = f"{query_element.innerHTML}\n{sparql_query}"
+    query_element.value = f"{query_element.innerHTML}\n{sparql_query}"
     run_query_btn = js.document.getElementById("run-query-btn")
     run_query_btn.click()

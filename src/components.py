@@ -5,7 +5,7 @@ from puepy import Component, t, Prop
 
 from bluecore_api import save_bluecore as api_save_bluecore
 from bluecore_api import search_bluecore as api_search_bluecore
-from query_rdf import run_summary_query
+from query_rdf import run_query, run_summary_query
 
 
 BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
@@ -546,15 +546,14 @@ class GraphSearchQueryToolbar(Component):
         """
         await api_search_bluecore(event, app=self.application)
 
-    def run_query(self, event):
+    async def run_query(self, event):
         """
         Handle SPARQL query execution button click.
 
         Args:
             event: The click event
         """
-        # TODO: Implement SPARQL query execution
-        pass
+        await run_query(event, app=self.application)
 
 
 @t.component()
@@ -569,6 +568,13 @@ class GraphWorkBench(Component):
 
     Each tab is initially hidden and can be shown dynamically when results are available.
     """
+
+    @property
+    def search_tab_classes(self):
+        classes = ["nav-item"]
+        if len(self.application.state["search_results"]) < 1:
+            classes.append("d-none")
+        return classes
 
     def populate(self):
         with t.div(
@@ -590,7 +596,7 @@ class GraphWorkBench(Component):
             ):
                 # Search Results tab
                 with t.li(
-                    classes=["nav-item", "d-none"],
+                    classes=self.search_tab_classes,
                     role="presentation",
                     id="search-results-tab",
                 ):
