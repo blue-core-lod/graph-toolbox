@@ -1,11 +1,11 @@
 import rdflib
 
-from js import alert, console, document, sessionStorage
+from js import alert, Blob, console, document, sessionStorage, URL
 from puepy import Component, t, Prop
 
 from bluecore_api import save_bluecore as api_save_bluecore
 from bluecore_api import search_bluecore as api_search_bluecore
-from query_rdf import run_query, run_summary_query
+from query_rdf import download_query_results, run_query, run_summary_query
 
 
 BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
@@ -475,11 +475,9 @@ class GraphSearchQueryToolbar(Component):
     - AI assistance for constructing SPARQL queries
     - Direct SPARQL query execution against the loaded graph
     """
+
     def initial(self):
-        return {
-            "sparql_query": "",
-            "search_query": ""
-        }
+        return {"sparql_query": "", "search_query": ""}
 
     def populate(self):
         # AI Assistance section
@@ -511,7 +509,12 @@ class GraphSearchQueryToolbar(Component):
                             "Get help constructing SPARQL queries to apply to the loaded graph"
                         )
 
-                t.textarea(classes=["form-control"], id="ai-search-resources", rows=10, bind="search_query")
+                t.textarea(
+                    classes=["form-control"],
+                    id="ai-search-resources",
+                    rows=10,
+                    bind="search_query",
+                )
 
                 with t.button(
                     id="sparql-chat",
@@ -532,7 +535,12 @@ class GraphSearchQueryToolbar(Component):
                 ):
                     t.i(classes=["bi", "bi-arrows-fullscreen"])
 
-            t.textarea(classes=["form-control"], id="bf-sparql-query", rows=10, bind="sparql_query")
+            t.textarea(
+                classes=["form-control"],
+                id="bf-sparql-query",
+                rows=10,
+                bind="sparql_query",
+            )
 
             with t.button(
                 classes=["btn", "btn-primary", "m-1", "d-block", "mx-auto"],
@@ -552,7 +560,9 @@ class GraphSearchQueryToolbar(Component):
         if not self.application.state["bluecore_env"]:
             alert("Please select a Bluecore Environment to search")
             return
-        await api_search_bluecore(event, app=self.application, query=self.state["search_query"])
+        await api_search_bluecore(
+            event, app=self.application, query=self.state["search_query"]
+        )
 
         # Hack to work with Bootstrap tabs
         tab_element = document.getElementById("search-results-tab-btn")
@@ -565,7 +575,9 @@ class GraphSearchQueryToolbar(Component):
         Args:
             event: The click event
         """
-        await run_query(event, app=self.application, sparql_query=self.state["sparql_query"])
+        await run_query(
+            event, app=self.application, sparql_query=self.state["sparql_query"]
+        )
 
         # Hack to work with Bootstrap tabs
         tab_element = document.getElementById("bf-sparql-results-tab-btn")
@@ -1220,12 +1232,29 @@ class SparqlQueryResultsList(Component):
     def sparql_results(self):
         """Get SPARQL results from application state."""
         return self.application.state.get("sparql_results")
-    
-    def download_csv(self, event):
-        console.log("In download_csv")
 
-    def download_json(self, event):
-        console.log("In download_json")
+    async def download_csv(self, event):
+        event.preventDefault()
+        await self.download_file("csv")
+
+    async def download_json(self, event):
+        event.preventDefault()
+        await self.download_file("json")
+
+    async def download_file(self, serialization_format: str):
+        contents, mime_type = await download_query_results(
+            self.application, serialization_format
+        )
+        blob = Blob.new([contents], {"type": mime_type})
+        anchor = document.createElement("a")
+        anchor.href = URL.createObjectURL(blob)
+        anchor.download = f"query-results.{serialization_format}"
+        document.body.appendChild(anchor)
+        anchor.click()
+        document.body.removeChild(anchor)
+        # Hack to work with Bootstrap tabs
+        tab_element = document.getElementById("bf-sparql-results-tab-btn")
+        tab_element.click()
 
     def populate(self):
         if not self.sparql_results:
@@ -1240,22 +1269,25 @@ class SparqlQueryResultsList(Component):
                         classes=["btn", "btn-secondary", "dropdown-toggle"],
                         data_bs_toggle="dropdown",
                         id="rdf-download-file",
-                        aria_expanded="false"
+                        aria_expanded="false",
                     ):
                         t("Download Results")
-                    with t.ul(classes=["dropdown-menu"],
-                              aria_labelledby="rdf-download-file"):
+                    with t.ul(
+                        classes=["dropdown-menu"], aria_labelledby="rdf-download-file"
+                    ):
                         with t.li():
-                            t.a("CSV (.csv)",
+                            t.a(
+                                "CSV (.csv)",
                                 classes=["dropdown-item"],
                                 href="#",
-                                on_click=self.download_csv
+                                on_click=self.download_csv,
                             )
                         with t.li():
-                            t.a("JSON (.json)",
+                            t.a(
+                                "JSON (.json)",
                                 classes=["dropdown-item"],
                                 href="#",
-                                on_click=self.download_json
+                                on_click=self.download_json,
                             )
 
             with t.table(classes=["table"]):
@@ -1275,6 +1307,7 @@ class ShaclValidationReport(Component):
     """
     Container for SHACL Validation Report on the loaded BIBFRAME Graph
     """
+
     def populate(self):
         if not self.application.state["validation"]:
             with t.div(classes=["w-100"]):
