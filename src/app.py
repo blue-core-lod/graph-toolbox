@@ -30,6 +30,7 @@ app.state["bf_graph"] = rdflib.Graph()
 app.state["bluecore_env"] = None
 app.state["search_results"] = []
 app.state["sparql_results"] = None
+app.state["validation"] = None
 
 
 @app.page()

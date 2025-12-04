@@ -106,7 +106,7 @@ async def save_bluecore(event, app=None):
         bench_bc_result.innerHTML = await batch_result.text
 
 
-async def search_bluecore(event, app=None):
+async def search_bluecore(event, app=None, query=""):
     """
     Searches Blue Core using API.
     Stores results in application state for Puepy components to render.
@@ -115,17 +115,8 @@ async def search_bluecore(event, app=None):
         app = _get_app()
 
     bluecore_env = app.state.get("bluecore_env")
-    query_elem = document.getElementById("ai-search-resources")
-    bench_heading = document.getElementById("bench-heading")
-    search_results_tab = document.getElementById("search-results-tab")
-    search_results_tab.classList.remove("d-none")
-    search_results_div = document.getElementById("search-results")
 
-    # Activate the search results tab
-    for class_ in ["active", "show"]:
-        search_results_div.classList.add(class_)
-
-    search_url = f"{bluecore_env}/api/search?" + urlencode({"q": query_elem.value})
+    search_url = f"{bluecore_env}/api/search?" + urlencode({"q": query})
     search_result = await pyfetch(search_url)
 
     if search_result.ok:
@@ -133,12 +124,8 @@ async def search_bluecore(event, app=None):
         total_results = int(search_result_json.get("total", 0))
 
         if total_results < 1:
-            bench_heading.innerHTML = """<h3>No results from Blue Core</h3>"""
             app.state["search_results"] = []
         else:
-            bench_heading.innerHTML = (
-                f"""<h3>{total_results:,} results from Blue Core</h3>"""
-            )
             # Store results in state - Puepy components will render them
             app.state["search_results"] = search_result_json.get("results", [])
 

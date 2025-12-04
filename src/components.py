@@ -477,8 +477,8 @@ class GraphSearchQueryToolbar(Component):
     """
     def initial(self):
         return {
-            "sparql": "",
-            "search": ""
+            "sparql_query": "",
+            "search_query": ""
         }
 
     def populate(self):
@@ -511,7 +511,7 @@ class GraphSearchQueryToolbar(Component):
                             "Get help constructing SPARQL queries to apply to the loaded graph"
                         )
 
-                t.textarea(classes=["form-control"], id="ai-search-resources", rows=10, bind="search")
+                t.textarea(classes=["form-control"], id="ai-search-resources", rows=10, bind="search_query")
 
                 with t.button(
                     id="sparql-chat",
@@ -532,7 +532,7 @@ class GraphSearchQueryToolbar(Component):
                 ):
                     t.i(classes=["bi", "bi-arrows-fullscreen"])
 
-            t.textarea(classes=["form-control"], id="bf-sparql-query", rows=10, bind="sparql")
+            t.textarea(classes=["form-control"], id="bf-sparql-query", rows=10, bind="sparql_query")
 
             with t.button(
                 classes=["btn", "btn-primary", "m-1", "d-block", "mx-auto"],
@@ -549,7 +549,14 @@ class GraphSearchQueryToolbar(Component):
         Args:
             event: The click event
         """
-        await api_search_bluecore(event, app=self.application)
+        if not self.application.state["bluecore_env"]:
+            alert("Please select a Bluecore Environment to search")
+            return
+        await api_search_bluecore(event, app=self.application, query=self.state["search_query"])
+
+        # Hack to work with Bootstrap tabs
+        tab_element = document.getElementById("search-results-tab-btn")
+        tab_element.click()
 
     async def run_query(self, event):
         """
@@ -558,8 +565,11 @@ class GraphSearchQueryToolbar(Component):
         Args:
             event: The click event
         """
+        await run_query(event, app=self.application, sparql_query=self.state["sparql_query"])
 
-        await run_query(event, app=self.application, sparql_query=self.state["sparql"])
+        # Hack to work with Bootstrap tabs
+        tab_element = document.getElementById("bf-sparql-results-tab-btn")
+        tab_element.click()
 
 
 @t.component()
@@ -574,13 +584,6 @@ class GraphWorkBench(Component):
 
     Each tab is initially hidden and can be shown dynamically when results are available.
     """
-
-    @property
-    def search_tab_classes(self):
-        classes = ["nav-item"]
-        if len(self.application.state["search_results"]) < 1:
-            classes.append("d-none")
-        return classes
 
     def populate(self):
         with t.div(
@@ -602,7 +605,7 @@ class GraphWorkBench(Component):
             ):
                 # Search Results tab
                 with t.li(
-                    classes=self.search_tab_classes,
+                    classes=["nav-item"],
                     role="presentation",
                     id="search-results-tab",
                 ):
@@ -619,27 +622,26 @@ class GraphWorkBench(Component):
                         t("Search Results")
 
                 # SPARQL Results tab
-                if self.application.state["sparql_results"]:
-                    with t.li(
-                        classes=["nav-item"],
-                        role="presentation",
-                        id="bf-sparql-results-tab",
+                with t.li(
+                    classes=["nav-item"],
+                    role="presentation",
+                    id="bf-sparql-results-tab",
+                ):
+                    with t.button(
+                        classes=["nav-link"],
+                        id="bf-sparql-results-tab-btn",
+                        data_bs_toggle="tab",
+                        data_bs_target="#bf-sparql-results",
+                        type="button",
+                        role="tab",
+                        aria_controls="bf-sparql-results",
+                        aria_selected="false",
                     ):
-                        with t.button(
-                            classes=["nav-link"],
-                            id="bf-sparql-results-tab-btn",
-                            data_bs_toggle="tab",
-                            data_bs_target="#bf-sparql-results",
-                            type="button",
-                            role="tab",
-                            aria_controls="bf-sparql-results",
-                            aria_selected="false",
-                        ):
-                            t("SPARQL Results")
+                        t("SPARQL Results")
 
                 # SHACL Results tab
                 with t.li(
-                    classes=["nav-item", "d-none"],
+                    classes=["nav-item"],
                     role="presentation",
                     id="bf-validation-results-tab",
                 ):
@@ -664,22 +666,22 @@ class GraphWorkBench(Component):
                     t.search_results_list()
 
                 # SPARQL results pane
-                if self.application.state["sparql_results"]:
-                    with t.div(
-                        id="bf-sparql-results",
-                        classes=["tab-pane", "fade", "overflow-auto"],
-                        aria_labelledby="bf-sparql-results-tab-btn",
-                        tabindex="0",
-                    ):
-                        t.sparql_query_results_list()
+                with t.div(
+                    id="bf-sparql-results",
+                    classes=["tab-pane", "fade", "overflow-auto"],
+                    aria_labelledby="bf-sparql-results-tab-btn",
+                    tabindex="0",
+                ):
+                    t.sparql_query_results_list()
 
                 # Validation results pane
-                t.div(
+                with t.div(
                     id="bf-validation-results",
                     classes=["tab-pane", "fade", "overflow-auto"],
                     aria_labelledby="",
                     tabindex="0",
-                )
+                ):
+                    t.shacl_validation_report()
 
 
 @t.component()
@@ -1055,6 +1057,8 @@ class SearchResultsList(Component):
 
     def populate(self):
         if not self.search_results:
+            with t.div(classes=["w-100"]):
+                t.h3("No search results")
             return
 
         # Display the query
@@ -1225,6 +1229,8 @@ class SparqlQueryResultsList(Component):
 
     def populate(self):
         if not self.sparql_results:
+            with t.div(classes=["w-100"]):
+                t.h3("No SPARQL results")
             return
 
         with t.div(classes=["w-100"]):
@@ -1262,3 +1268,15 @@ class SparqlQueryResultsList(Component):
                         with t.tr():
                             for var in self.sparql_results.vars:
                                 t.td(row.get(var, ""))
+
+
+@t.component()
+class ShaclValidationReport(Component):
+    """
+    Container for SHACL Validation Report on the loaded BIBFRAME Graph
+    """
+    def populate(self):
+        if not self.application.state["validation"]:
+            with t.div(classes=["w-100"]):
+                t.h3("No validation report available.")
+                return
