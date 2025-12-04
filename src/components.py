@@ -475,6 +475,11 @@ class GraphSearchQueryToolbar(Component):
     - AI assistance for constructing SPARQL queries
     - Direct SPARQL query execution against the loaded graph
     """
+    def initial(self):
+        return {
+            "sparql": "",
+            "search": ""
+        }
 
     def populate(self):
         # AI Assistance section
@@ -506,7 +511,7 @@ class GraphSearchQueryToolbar(Component):
                             "Get help constructing SPARQL queries to apply to the loaded graph"
                         )
 
-                t.textarea(classes=["form-control"], id="ai-search-resources", rows=10)
+                t.textarea(classes=["form-control"], id="ai-search-resources", rows=10, bind="search")
 
                 with t.button(
                     id="sparql-chat",
@@ -527,7 +532,7 @@ class GraphSearchQueryToolbar(Component):
                 ):
                     t.i(classes=["bi", "bi-arrows-fullscreen"])
 
-            t.textarea(classes=["form-control"], id="bf-sparql-query", rows=10)
+            t.textarea(classes=["form-control"], id="bf-sparql-query", rows=10, bind="sparql")
 
             with t.button(
                 classes=["btn", "btn-primary", "m-1", "d-block", "mx-auto"],
@@ -553,7 +558,8 @@ class GraphSearchQueryToolbar(Component):
         Args:
             event: The click event
         """
-        await run_query(event, app=self.application)
+
+        await run_query(event, app=self.application, sparql_query=self.state["sparql"])
 
 
 @t.component()
@@ -613,22 +619,23 @@ class GraphWorkBench(Component):
                         t("Search Results")
 
                 # SPARQL Results tab
-                with t.li(
-                    classes=["nav-item", "d-none"],
-                    role="presentation",
-                    id="bf-sparql-results-tab",
-                ):
-                    with t.button(
-                        classes=["nav-link"],
-                        id="bf-sparql-results-tab-btn",
-                        data_bs_toggle="tab",
-                        data_bs_target="#bf-sparql-results",
-                        type="button",
-                        role="tab",
-                        aria_controls="bf-sparql-results",
-                        aria_selected="false",
+                if self.application.state["sparql_results"]:
+                    with t.li(
+                        classes=["nav-item"],
+                        role="presentation",
+                        id="bf-sparql-results-tab",
                     ):
-                        t("SPARQL Results")
+                        with t.button(
+                            classes=["nav-link"],
+                            id="bf-sparql-results-tab-btn",
+                            data_bs_toggle="tab",
+                            data_bs_target="#bf-sparql-results",
+                            type="button",
+                            role="tab",
+                            aria_controls="bf-sparql-results",
+                            aria_selected="false",
+                        ):
+                            t("SPARQL Results")
 
                 # SHACL Results tab
                 with t.li(
@@ -657,12 +664,14 @@ class GraphWorkBench(Component):
                     t.search_results_list()
 
                 # SPARQL results pane
-                t.div(
-                    id="bf-sparql-results",
-                    classes=["tab-pane", "fade", "overflow-auto"],
-                    aria_labelledby="bf-sparql-results-tab-btn",
-                    tabindex="0",
-                )
+                if self.application.state["sparql_results"]:
+                    with t.div(
+                        id="bf-sparql-results",
+                        classes=["tab-pane", "fade", "overflow-auto"],
+                        aria_labelledby="bf-sparql-results-tab-btn",
+                        tabindex="0",
+                    ):
+                        t.sparql_query_results_list()
 
                 # Validation results pane
                 t.div(
@@ -1191,3 +1200,65 @@ class SearchResultItem(Component):
         self.application.state["search_results"] = [
             r for r in search_results if r.get("uri") != self.uri
         ]
+
+
+@t.component()
+class SparqlQueryResultsList(Component):
+    """
+    Container component for displaying SPARQL query results.
+
+    Watches the sparql_results state and renders the results table.
+    """
+
+    redraw_on_app_state_changes = ["sparql_results"]
+
+    @property
+    def sparql_results(self):
+        """Get SPARQL results from application state."""
+        return self.application.state.get("sparql_results")
+    
+    def download_csv(self, event):
+        console.log("In download_csv")
+
+    def download_json(self, event):
+        console.log("In download_json")
+
+    def populate(self):
+        if not self.sparql_results:
+            return
+
+        with t.div(classes=["w-100"]):
+            with t.div():
+                with t.div(classes=["dropdown"]):
+                    with t.button(
+                        classes=["btn", "btn-secondary", "dropdown-toggle"],
+                        data_bs_toggle="dropdown",
+                        id="rdf-download-file",
+                        aria_expanded="false"
+                    ):
+                        t("Download Results")
+                    with t.ul(classes=["dropdown-menu"],
+                              aria_labelledby="rdf-download-file"):
+                        with t.li():
+                            t.a("CSV (.csv)",
+                                classes=["dropdown-item"],
+                                href="#",
+                                on_click=self.download_csv
+                            )
+                        with t.li():
+                            t.a("JSON (.json)",
+                                classes=["dropdown-item"],
+                                href="#",
+                                on_click=self.download_json
+                            )
+
+            with t.table(classes=["table"]):
+                with t.thead():
+                    with t.tr():
+                        for var in self.sparql_results.vars:
+                            t.th(var)
+                with t.tbody():
+                    for row in self.sparql_results.bindings:
+                        with t.tr():
+                            for var in self.sparql_results.vars:
+                                t.td(row.get(var, ""))

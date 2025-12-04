@@ -1,15 +1,9 @@
 import json
 
 import js
-
-import pandas as pd
-
 import helpers
 
 from load_rdf import bibframe_sparql
-
-from jinja2 import Template
-
 
 def _get_app():
     """Get the app instance to access state."""
@@ -17,45 +11,6 @@ def _get_app():
 
     return app
 
-
-query_results_template = Template(
-    """<div class="w-100">
- <div>
-  <div class="dropdown">
-    <button class="btn btn-secondary dropdown-toggle" 
-            type="button" 
-            data-bs-toggle="dropdown"
-            id="rdf-download-file"
-            aria-expanded="false">
-      Download Results
-    </button>
-    <ul class="dropdown-menu" aria-labelledby="rdf-download-file">
-        <li><a py-click="download_query_results" data-serialization='csv' class="dropdown-item" href="#">CSV (.csv)</a></li>
-        <li><a class="dropdown-item" py-click="download_query_results" data-serialization='json' href="#">JSON (.json)</a></li>
-    </ul>
-  </div>
-</div>
-<table class="table">          
-  <thead>
-    <tr>
-   {% for var in vars %}
-     <th>{{ var }}</th>
-   {% endfor %} 
-    </tr>                       
-  </thead>
-  <tbody>
-    {% for result in results %}
-     <tr>
-      {% for var in vars %}
-      <td>{{ result[var] }}</td>
-      {% endfor %}                     
-     </tr> 
-    {% endfor %}                        
-  </tbody>
-</table>
-</div>           
-"""
-)
 
 
 async def download_query_results(event):
@@ -92,6 +47,12 @@ async def download_query_results(event):
 
 async def run_query(*args, **kwargs):
     app = kwargs.get("app")
+    sparql_query = kwargs.get("sparql_query", "")
+
+    if len(sparql_query) < 1:
+        js.alert("No SPARQL query to run.")
+        return
+
     if not app:
         app = _get_app()
     
@@ -101,26 +62,10 @@ async def run_query(*args, **kwargs):
         js.alert("Graph not initialized. Please load data first.")
         return
 
-    bench_header = js.document.getElementById("bench-heading")
-    query_element = js.document.getElementById("bf-sparql-query")
-    sparql_query = query_element.value
-    tab = js.document.getElementById("bf-sparql-results-tab")
-    tab.classList.remove("d-none")
-    output_element = js.document.getElementById("bf-sparql-results")
-    for class_ in ["active", "show"]:
-        output_element.classList.add(class_)
-    output_element.content = ""
     try:
-        query = bf_graph.query(sparql_query)
-        results_df = pd.DataFrame(query.bindings)
-        output_element.innerHTML = query_results_template.render(
-            vars=query.vars, results=query.bindings
-        )
-        bench_header.innerHTML = f"<h2>Query Results {len(query.bindings):,} Rows</h2>"
-        js.console.log("Finished processing")
-        app.state["results_df"] = results_df
+        app.state["sparql_results"] = bf_graph.query(sparql_query)
     except Exception as e:
-        output_element.content = f"""<h2>Query Error</h2><p>{e}</p>"""
+        js.alert(f"SPARQL Query Error {e}")
 
 
 def run_summary_query(query_type):

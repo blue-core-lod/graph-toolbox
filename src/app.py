@@ -29,6 +29,7 @@ app.install_router(Router, link_mode=Router.LINK_MODE_HASH)
 app.state["bf_graph"] = rdflib.Graph()
 app.state["bluecore_env"] = None
 app.state["search_results"] = []
+app.state["sparql_results"] = None
 
 
 @app.page()
