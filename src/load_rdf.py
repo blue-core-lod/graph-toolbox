@@ -4,19 +4,11 @@ import js
 import rdflib
 
 
-from jinja2 import Template
 from pyodide.ffi import create_proxy
 from pyodide.http import pyfetch
 
+from helpers import NAMESPACES
 from sinopia_api import environments
-
-# Define common RDF namespaces
-NAMESPACES = [
-    ("bf", rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")),
-    ("bflc", rdflib.Namespace("http://id.loc.gov/ontologies/bflc/")),
-    ("madsrdf", rdflib.Namespace("http://www.loc.gov/mads/rdf/v1#")),
-    ("sin", rdflib.Namespace("http://sinopia.io/vocabulary/")),
-]
 
 
 def _get_app():
@@ -170,16 +162,6 @@ def summarize_graph(graph: rdflib.Graph):
     instances_count_badge = js.document.getElementById("bf-instances-count")
     instances_count_badge.innerHTML = f"{int(instances_count.get('instanceCount')):,}"
 
-
-sparql_template = Template(
-    """{% for ns in namespaces %}PREFIX {{ ns[0] }}: <{{ ns[1] }}>\n{% endfor %}"""
-)
-
-
-def bibframe_sparql(element_id: str):
-    wrapper_div = js.document.getElementById(element_id)
-    all_namespaces = NAMESPACES + [("rdf", rdflib.RDF), ("rdfs", rdflib.RDFS)]
-    wrapper_div.value = sparql_template.render(namespaces=all_namespaces)
 
 
 async def load_cbd_file(event):

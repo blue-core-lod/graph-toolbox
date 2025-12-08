@@ -5,10 +5,15 @@ from puepy import Component, t, Prop
 
 from bluecore_api import save_bluecore as api_save_bluecore
 from bluecore_api import search_bluecore as api_search_bluecore
-from query_rdf import download_query_results, run_query, run_summary_query
+from helpers import BF, NAMESPACES
+from query_rdf import download_query_results, get_summary_query, run_query
 
-
-BF = rdflib.Namespace("http://id.loc.gov/ontologies/bibframe/")
+def sparql_prefix() -> str:
+    prefix = ""
+    all_namespaces = NAMESPACES + [("rdf", rdflib.RDF), ("rdfs", rdflib.RDFS)]
+    for ns in all_namespaces:
+        prefix += f"PREFIX {ns[0]}: <{ns[1]}>\n"
+    return prefix
 
 
 @t.component()
@@ -126,9 +131,8 @@ class GraphInfoToolbar(Component):
                         with t.button(
                             type="button",
                             classes=["btn", "btn-success"],
-                            on_click=lambda event: self.on_run_summary_query(
-                                event, "all"
-                            ),
+                            data_query="all",
+                            on_click=self.on_run_summary_query,
                         ):
                             t("Total Triples")
                             t(" ")
@@ -141,9 +145,8 @@ class GraphInfoToolbar(Component):
                         with t.button(
                             type="button",
                             classes=["btn", "btn-info"],
-                            on_click=lambda event: self.on_run_summary_query(
-                                event, "subject"
-                            ),
+                            data_query="subject",
+                            on_click=self.on_run_summary_query,
                         ):
                             t("Subjects")
                             t(" ")
@@ -156,9 +159,8 @@ class GraphInfoToolbar(Component):
                         with t.button(
                             type="button",
                             classes=["btn", "btn-primary"],
-                            on_click=lambda event: self.on_run_summary_query(
-                                event, "predicate"
-                            ),
+                            data_query="predicate",
+                            on_click=self.on_run_summary_query,
                         ):
                             t("Predicates")
                             t(" ")
@@ -171,9 +173,8 @@ class GraphInfoToolbar(Component):
                         with t.button(
                             type="button",
                             classes=["btn", "btn-info"],
-                            on_click=lambda event: self.on_run_summary_query(
-                                event, "object"
-                            ),
+                            data_query="object",
+                            on_click=self.on_run_summary_query,
                         ):
                             t("Objects")
                             t(" ")
@@ -232,7 +233,7 @@ class GraphInfoToolbar(Component):
                         ):
                             t.i(classes=["bi", "bi-floppy"])
 
-    def on_run_summary_query(self, event, query_type):
+    async def on_run_summary_query(self, event):
         """
         Handle summary query button clicks.
 
@@ -240,7 +241,18 @@ class GraphInfoToolbar(Component):
             event: The click event
             query_type: Type of query ('all', 'subject', 'predicate', 'object')
         """
-        run_summary_query(query_type)
+        query_type = event.target.getAttribute("data-query")
+        sparql_query = get_summary_query(query_type)
+        query_element = document.getElementById("bf-sparql-query")
+        sparql_query = f"{query_element.value}\n{sparql_query}"
+        result = await run_query(app=self.application, sparql_query=sparql_query)
+        if result:
+            query_element.value = sparql_query
+            console.log(f"Before Query element is {query_element.value}")
+            # Hack to work with Bootstrap tabs
+            tab_element = document.getElementById("bf-sparql-results-tab-btn")
+            tab_element.click()
+            console.log(f"After tab_element click Query element is {query_element.value}")
 
     async def on_save_bluecore(self, event):
         """
@@ -477,7 +489,7 @@ class GraphSearchQueryToolbar(Component):
     """
 
     def initial(self):
-        return {"sparql_query": "", "search_query": ""}
+        return {"sparql_query": sparql_prefix(), "search_query": ""}
 
     def populate(self):
         # AI Assistance section

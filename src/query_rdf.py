@@ -5,7 +5,6 @@ import pandas as pd
 from pyparsing.exceptions import ParseException
 
 from js import alert, console, document
-from load_rdf import bibframe_sparql
 
 
 def _get_app():
@@ -40,7 +39,7 @@ async def download_query_results(app, serialization):
     return contents, mime_type
 
 
-async def run_query(*args, **kwargs):
+async def run_query(*args, **kwargs) -> bool:
     app = kwargs.get("app")
     sparql_query = kwargs.get("sparql_query", "")
 
@@ -64,9 +63,11 @@ async def run_query(*args, **kwargs):
         # TODO: Need to update app state with results
     except Exception as e:
         alert(f"SPARQL Query Error {e}")
+        return False
+    return True
 
 
-def run_summary_query(query_type):
+def get_summary_query(query_type):
     match query_type:
         case "all":
             sparql_query = """SELECT ?subject ?predicate ?object WHERE { ?subject ?predicate ?object . }"""
@@ -80,8 +81,4 @@ def run_summary_query(query_type):
         case "subject":
             sparql_query = """SELECT DISTINCT ?subject WHERE { ?subject ?p ?o . }"""
 
-    bibframe_sparql("bf-sparql-query")
-    query_element = document.getElementById("bf-sparql-query")
-    query_element.value = f"{query_element.innerHTML}\n{sparql_query}"
-    run_query_btn = document.getElementById("run-query-btn")
-    run_query_btn.click()
+    return sparql_query
