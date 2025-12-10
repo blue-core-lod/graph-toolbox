@@ -1080,7 +1080,7 @@ class SearchResultsList(Component):
         return query_elem.value if query_elem else ""
 
     def populate(self):
-        if not self.search_results:
+        if not self.search_results or len(self.search_results.get("results", [])) < 1:
             with t.div(classes=["w-100"]):
                 t.h3("No search results")
             return
@@ -1094,8 +1094,10 @@ class SearchResultsList(Component):
                     t(self.search_query)
 
         # Render each search result item
-        for item in self.search_results:
+        for item in self.search_results.get("results", []):
             t.search_result_item(item=item)
+
+        t.search_result_pagination()
 
 
 @t.component()
@@ -1224,11 +1226,97 @@ class SearchResultItem(Component):
         self.application.state["bf_graph"] = updated_graph
 
         # Remove this item from search results
-        search_results = self.application.state.get("search_results", [])
-        self.application.state["search_results"] = [
-            r for r in search_results if r.get("uri") != self.uri
-        ]
+        search_results = self.application.state.get("search_results", {}).get("results")
 
+        self.application.state["search_results"] = {
+            "results": [
+                r for r in search_results if r.get("uri") != self.uri
+            ],
+            "links": self.application.state.get("search_results")["links"],
+            "total": self.application.state.get("search_results")["total"]
+        }
+
+@t.component()
+class SearchResultPagination(Component):
+    """
+    Displays Pagination for Search Results
+    """
+    redraw_on_app_state_changes = ["search_results"]
+
+    def first(self):
+        if "first" in self.links:
+            with t.li(classes=["page-item"]):
+                with t.a(classes=["page-link"],
+                         on_click=self.load_link,
+                         href=self.links.get("first"), 
+                         aria_label="First"):
+                    t.span(classes=["bi", "bi-chevron-double-left"])
+
+    def last(self):
+        if self.total > 10:
+            offset = self.total - self.total%10
+            last_url = self.links.get("first").replace("offset=0", f"offset={offset}")
+            with t.li(classes=["page-item"]):
+                with t.a(classes=["page-link"],
+                         on_click=self.load_link,
+                         href=last_url,
+                         area_label="Last"):
+                    t.span(classes=["bi", "bi-chevron-double-right"])
+
+
+    def next(self):
+        next = self.links.get("next")
+        classes = ["page-item"]
+        if not next:
+            classes.append("disabled")
+            next = ""
+        with t.li(classes=classes):
+            with t.a(classes=["page-link"],
+                     href=next,
+                     on_click=self.load_link):
+                t.span(classes=["bi", "bi-chevron-right"])
+                
+        
+    
+    def previous(self):
+        first = self.links.get("first")
+        prev = self.links.get("previous")
+        classes = ["page-item"]
+        if first == prev: # At the first page
+            classes.append("disabled")
+        
+        with t.li(classes=classes):
+            with t.a(classes=["page-link"],
+                href=prev,
+                on_click=self.load_link):
+                t.span(classes=["bi", "bi-chevron-left"])
+                
+
+
+    @property
+    def links(self):
+        """Get Search Links from application state"""
+        return self.application.state.get("search_results", {}).get("links", {})
+    
+    @property
+    def total(self):
+        """Get total from application state"""
+        return int(self.application.state.get("search_results", {}).get("total", 0))
+
+    def load_link(self, event):
+        event.preventDefault()
+        pass
+
+    def populate(self):
+        if len(self.links) < 1:
+            return
+        with t.nav(aria_label="Search Results Pages"):
+            with t.ul(classes=["pagination"]):
+                self.first()
+                self.previous()
+                self.next()
+                self.last()
+       
 
 @t.component()
 class SparqlQueryResultsList(Component):

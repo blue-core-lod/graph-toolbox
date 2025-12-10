@@ -121,13 +121,9 @@ async def search_bluecore(event, app=None, query=""):
 
     if search_result.ok:
         search_result_json = await search_result.json()
-        total_results = int(search_result_json.get("total", 0))
 
-        if total_results < 1:
-            app.state["search_results"] = []
-        else:
-            # Store results in state - Puepy components will render them
-            app.state["search_results"] = search_result_json.get("results", [])
+        # Store results in state - Puepy components will render them
+        app.state["search_results"] = search_result_json
 
 
 async def set_environment(this):
