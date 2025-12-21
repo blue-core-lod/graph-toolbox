@@ -233,10 +233,13 @@ class LoginModal(Component):
 
     Provides Keycloak login interface for Blue Core authentication.
     """
+    def initial(self):
+        return {"username": None, "password": None}
 
+    @property
     def encode_body(self):
         form_bytes = bytes(
-            f"client_id=bluecore_api&username={keycloak_username}&password={keycloak_password}&grant_type=password",
+            f"client_id=bluecore_api&username={self.state['username']}&password={self.state['password']}&grant_type=password",
             encoding="utf-8",
         )
         return form_bytes
@@ -267,6 +270,7 @@ class LoginModal(Component):
                             )
                             t.input(
                                 type="text",
+                                bind="username",
                                 classes=["form-control"],
                                 id="keycloak_username",
                                 placeholder="Enter Username",
@@ -281,6 +285,7 @@ class LoginModal(Component):
                             )
                             t.input(
                                 type="password",
+                                bind="password",
                                 classes=["form-control"],
                                 id="keycloak_password",
                                 placeholder="Enter password",
@@ -301,10 +306,34 @@ class LoginModal(Component):
                             on_click=self.bluecore_login,
                         )
 
-    def bluecore_login(self, event):
+    async def bluecore_login(self, event):
         """Handle Blue Core login."""
-        # TODO: Implement Blue Core Keycloak login
-        pass
+        from pyodide.http import pyfetch
+
+        bluecore_env = self.application.state["bluecore_env"]
+        if bluecore_env is None:
+            alert("Need to set Bluecore Environment to Log into")
+            return
+        
+        try:
+            token_result = await pyfetch(
+                f"{bluecore_env}/keycloak/realms/bluecore/protocol/openid-connect/token",
+                method="POST",
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                body=self.encode_body,
+            )
+
+            if token_result.ok:
+                tokens = await token_result.json()
+                self.application.state["tokens"] = tokens
+                self.application.state["username"] = self.state['username']
+
+        except AbortError as e:
+            alert(f"Login Error!\n{e}")
+            return
+
+
+        
 
 
 @t.component()
