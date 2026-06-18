@@ -143,7 +143,7 @@ async def search_bluecore(event):
     for class_ in ["active", "show"]:
         bench_bc_results.classList.add(class_)
     bench_bc_results.innerHTML = ""
-    search_url = f"{BLUECORE_ENV}/api/search?" + urlencode({ "q": query_elem.value })
+    search_url = f"{BLUECORE_ENV}/api/search/?" + urlencode({ "q": query_elem.value })
     search_result = await pyfetch(search_url)
     if search_result.ok:
         search_result_json = await search_result.json()
