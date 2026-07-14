@@ -16,13 +16,15 @@ def _expires_at(seconds: int) -> str:
     return expires.isoformat()
 
 
-def _add_search_item(item: dict):
+def _add_search_item(item: dict, context: dict):
     alert = document.createElement("div")
     for class_ in ["alert", "alert-info", "alert-dismissible", "fade", "show"]:
         alert.classList.add(class_)
     uri = item.get('uri')
+    data = item.get('data')
+    data["@context"] = context
     graph = rdflib.Graph()
-    graph.parse(data=item.get('data'), format='json-ld')
+    graph.parse(data=data, format='json-ld')
     title_query = graph.query("""
     SELECT ?mainTitle
     WHERE {
@@ -143,7 +145,7 @@ async def search_bluecore(event):
     for class_ in ["active", "show"]:
         bench_bc_results.classList.add(class_)
     bench_bc_results.innerHTML = ""
-    search_url = f"{BLUECORE_ENV}/api/search?" + urlencode({ "q": query_elem.value })
+    search_url = f"{BLUECORE_ENV}/api/search/?" + urlencode({ "q": query_elem.value })
     search_result = await pyfetch(search_url)
     if search_result.ok:
         search_result_json = await search_result.json()
@@ -156,9 +158,13 @@ async def search_bluecore(event):
         div_query = document.createElement("div")
         div_query.innerHTML = f"""<strong>Query:</strong><p>{query_elem.value}</p>"""
         bench_bc_results.append(div_query)
-        for item in search_result_json.get("results", []):
-            alert = _add_search_item(item)
-            bench_bc_results.append(alert)
+        context_result = await pyfetch(f"{BLUECORE_ENV}/api/context.jsonld")
+        if context_result.ok:
+            context_payload = await context_result.json()
+            context = context_payload["@context"]
+            for item in search_result_json.get("results", []):
+                alert = _add_search_item(item, context)
+                bench_bc_results.append(alert)
         
 
 
