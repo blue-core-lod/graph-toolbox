@@ -29,6 +29,7 @@
            <ul class="dropdown-menu">
             <a class="dropdown-item" href="#" py-click="set_environment" data-env="http://localhost">Local</a>
             <a class="dropdown-item" href="#" py-click="set_environment" data-env="https://dev.bcld.info">dev.bcld.info</a>
+            <a class="dropdown-item" href="#" py-click="set_environment" data-env="https://stage.bcld.info">stage.bcld.info</a>
             <a class="dropdown-item disabled" href="#" py-click="set_environment" data-env="https://bcld.info" aria-disabled="true">bcld.info</a>
            </ul>
         </li>
@@ -58,7 +59,7 @@
       </ul>
       <div class="d-flex" role="user-mgt">
         <span id="user-name" class="m-2">not logged in</span>
-        <button class="btn btn-primary mt-1"  
+        <button class="btn btn-primary mt-1"
             data-bs-toggle="modal" data-bs-target="#loginModal">
             <span id="login-action">
             <i class="bi bi-box-arrow-in-right"></i>
