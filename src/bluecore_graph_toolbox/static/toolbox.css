@@ -1,0 +1,15 @@
+/*
+ * Graph Toolbox styles, loaded after the shared bluecore.css. Only rules
+ * specific to the Toolbox belong here; anything every plugin page needs goes
+ * in bluecore-airflow-common instead.
+ */
+
+.toolbox-logo {
+  width: 12rem;
+  height: auto;
+}
+
+.toolbox-version {
+  font-size: 1rem;
+  color: var(--bluecore-fg-muted);
+}
