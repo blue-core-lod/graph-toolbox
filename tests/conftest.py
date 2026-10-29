@@ -6,7 +6,6 @@ import importlib
 from collections.abc import Iterator
 from types import ModuleType
 
-import bluecore_airflow_common as common
 import pytest
 from airflow.api_fastapi.core_api.security import get_user
 from fastapi.testclient import TestClient
@@ -66,7 +65,6 @@ def signed_in_client(plugin: ModuleType) -> Iterator[TestClient]:
 
     The name contains markup so tests can check the page escapes it.
     """
-    plugin.app.dependency_overrides[common.requires_login] = lambda: None
     plugin.app.dependency_overrides[get_user] = lambda: StubUser("<b>cataloger</b>")
     yield TestClient(plugin.app)
     plugin.app.dependency_overrides.clear()
