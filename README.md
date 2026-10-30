@@ -26,10 +26,19 @@ template and styles come from
 
 Requires Python 3.12 and Airflow 3.2 or later (tested against 3.3.2).
 
+Releases are published to PyPI as
+[bluecore-graph-toolbox](https://pypi.org/p/bluecore-graph-toolbox)
+
 ```sh
 uv build
-uv pip install dist/blue_core_graph_toolbox-*.whl
+uv add bluecore-graph-toolbox
 ```
+
+In [bluecore-workflows](https://github.com/blue-core-lod/bluecore-workflows),
+add the pin to `dependencies` in its `pyproject.toml` and run `uv lock`; the
+Docker image installs it from the lockfile, so no wheel is copied in. When a
+new Toolbox release adds screens or API routes, bump that pin and `uv lock`
+again in a Workflows pull request.
 
 Once installed, a Toolbox item appears in the Airflow navigation. The UI
 shows it in an iframe at `/plugin/graph-toolbox`; the app itself is mounted at
@@ -56,3 +65,19 @@ uv sync
 uv run ruff check src/bluecore_graph_toolbox tests
 uv run pytest
 ```
+
+## Releasing
+
+Releases go to PyPI from
+[`.github/workflows/python-publish.yml`](.github/workflows/python-publish.yml)
+using [trusted publishing](https://docs.pypi.org/trusted-publishers/), so no
+API token is stored in the repo.
+
+1. Bump `version` in `pyproject.toml` (`uv version --bump minor`, say) and
+   merge it to `main`.
+2. Create a GitHub release whose tag is `v` plus that version, e.g. `v2.1.0`.
+3. Publishing the release runs the workflow: it checks the tag against
+   `pyproject.toml`, runs the tests, builds the wheel and sdist, checks that the
+   wheel installs as an Airflow plugin, and uploads both to PyPI. Approve the
+   `pypi` environment deployment if it asks.
+4. Bump the pin in bluecore-workflows as described above.
