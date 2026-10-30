@@ -1,0 +1,91 @@
+# Upload bluecore-graph-toolbox to PyPI when a GitHub release is published.
+# Publishing uses PyPI trusted publishing, so PyPI needs a trusted publisher for
+# this repo, this workflow file (python-publish.yml) and the "pypi" environment.
+
+name: Upload Python Package
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  release-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Check the release tag matches the version
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version="v$(uv version --short)"
+          if [ "$version" != "$TAG" ]; then
+            echo "::error::Release tag $TAG does not match pyproject.toml version $version"
+            exit 1
+          fi
+
+      - name: Run tests
+        run: uv run pytest
+
+      - name: Build release distributions
+        run: uv build
+
+            # The tests run against an editable install, which can hide files missing
+      # from the wheel, so install the built wheel on its own and check it.
+      - name: Check the wheel installs as an Airflow plugin
+        run: |
+          uv run --isolated --no-project --with dist/bluecore_graph_toolbox-*.whl python - <<'EOF'
+          from importlib.metadata import entry_points
+          from importlib.resources import files
+
+          [entry_point] = entry_points(group="airflow.plugins", name="bluecore_graph_toolbox")
+          entry_point.load()
+          package = files("bluecore_graph_toolbox")
+          for name in [
+              "static/toolbox.css",
+              "static/toolbox.svg",
+              "static/toolbox-dark.svg",
+              "static/blue-core-v1.svg",
+              "templates/index.html",
+          ]:
+              assert package.joinpath(name).is_file(), f"missing {name}"
+          EOF
+
+      - name: Upload distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+
+  pypi-publish:
+    runs-on: ubuntu-latest
+    needs:
+      - release-build
+    permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
+
+    # Add required reviewers to this environment in the repo settings to gate
+    # each upload on an approval.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/bluecore-graph-toolbox
+
+    steps:
+      - name: Retrieve release distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: release-dists
+          path: dist/
+
+      - name: Publish release distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/

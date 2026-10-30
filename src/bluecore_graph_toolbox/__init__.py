@@ -3,6 +3,6 @@
 from importlib.metadata import PackageNotFoundError, version
 
 try:
-    __version__ = version("blue-core-graph-toolbox")
+    __version__ = version("bluecore-graph-toolbox")
 except PackageNotFoundError:
     __version__ = "0.0.0+unknown"
