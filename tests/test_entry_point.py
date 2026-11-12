@@ -6,8 +6,7 @@ from importlib.metadata import entry_points, version
 
 from airflow.plugins_manager import AirflowPlugin
 
-from bluecore_graph_toolbox import __version__
-from bluecore_graph_toolbox.plugin import GraphToolboxPlugin
+from bluecore_graph_toolbox import __version__, plugin
 
 
 def test_plugin_is_registered_as_an_airflow_entry_point() -> None:
@@ -15,7 +14,9 @@ def test_plugin_is_registered_as_an_airflow_entry_point() -> None:
 
     assert entry_point.value == "bluecore_graph_toolbox.plugin:GraphToolboxPlugin"
     loaded = entry_point.load()
-    assert loaded is GraphToolboxPlugin
+    # Looked up now, not imported at collection: other tests reload the plugin
+    # module, which replaces the class.
+    assert loaded is plugin.GraphToolboxPlugin
     assert issubclass(loaded, AirflowPlugin)
 
 

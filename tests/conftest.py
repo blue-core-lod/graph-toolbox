@@ -8,9 +8,20 @@ from types import ModuleType
 
 import pytest
 from airflow.api_fastapi.core_api.security import get_user
+from bluecore_airflow_common.integration.settings import (
+    BlueCoreSettings,
+    get_settings,
+)
 from fastapi.testclient import TestClient
 
 from bluecore_graph_toolbox import plugin as plugin_module
+
+# A deployment's settings. The internal URLs must never reach a response.
+SETTINGS = BlueCoreSettings(
+    internal_url="http://bc-api.internal.test",
+    public_url="https://bcld.test",
+    airflow_internal_url="http://airflow.internal.test/workflows",
+)
 
 # [api] base_url values, with the path each one should put in front of every
 # URL: Airflow at the root, proxied under /workflows, and not set at all.
@@ -48,9 +59,13 @@ def plugin(root_path: str) -> ModuleType:
     """The plugin module, imported again under the current base_url.
 
     The nav link and icon URLs are built when the module is imported, so it
-    has to be reloaded for each base path to see the change.
+    has to be reloaded for each base path to see the change. Reloading also
+    builds a new app, so overrides set by one test never reach the next.
+    The Blue Core settings come from ``SETTINGS``, not the environment.
     """
-    return importlib.reload(plugin_module)
+    module = importlib.reload(plugin_module)
+    module.app.dependency_overrides[get_settings] = lambda: SETTINGS
+    return module
 
 
 @pytest.fixture
@@ -67,4 +82,4 @@ def signed_in_client(plugin: ModuleType) -> Iterator[TestClient]:
     """
     plugin.app.dependency_overrides[get_user] = lambda: StubUser("<b>cataloger</b>")
     yield TestClient(plugin.app)
-    plugin.app.dependency_overrides.clear()
+    plugin.app.dependency_overrides.pop(get_user)
