@@ -12,14 +12,11 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
 
-      # Only the plugin package and its tests: the legacy PyScript modules in
-      # src/*.py predate ruff here and are retired as screens move over (#48).
       - name: Format
-        run: uv run ruff format --diff src/bluecore_graph_toolbox tests
+        run: uv run ruff format --diff
 
       - name: Lint
-        run: uv run ruff check src/bluecore_graph_toolbox tests
-
+        run: uv run ruff check
   test:
     runs-on: ubuntu-latest
     strategy:
