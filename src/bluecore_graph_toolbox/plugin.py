@@ -11,10 +11,11 @@ The plugin registers two things with Airflow:
    Routes, relative to the prefix:
 
 - ``GET /``: landing page (signed in)
+- ``GET /api/config``: browser-safe settings (signed in)
+- ``GET /dashboard``, ``/marc-bibframe-operations``, ``/sparql``,
+  ``/ai-search``: application stubs (signed in), see ``api``
 - ``GET /health``: ``{"status", "version"}`` (public)
 - ``/static/*`` and ``/static/bluecore/*``: assets (public)
-
-Toolbox screens are built out in graph-toolbox #43 and #45-47.
 """
 
 from __future__ import annotations
@@ -24,10 +25,12 @@ import pathlib
 import bluecore_airflow_common as common
 from airflow.api_fastapi.core_api.security import GetUserDep
 from airflow.plugins_manager import AirflowPlugin
+from bluecore_airflow_common.integration.auth import install_token_redaction
+from bluecore_airflow_common.integration.errors import install_error_handler
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse
 
-from bluecore_graph_toolbox import __version__
+from bluecore_graph_toolbox import __version__, api
 
 PLUGIN_NAME = "bluecore_graph_toolbox"
 TITLE = "Blue Core Graph Toolbox"
@@ -46,6 +49,8 @@ STATIC_DIR = PACKAGE_DIR / "static"
 TEMPLATES_DIR = PACKAGE_DIR / "templates"
 
 app = FastAPI(title=TITLE, docs_url=None, redoc_url=None, openapi_url=None)
+install_error_handler(app)
+install_token_redaction()
 common.mount_static(app, STATIC_DIR)
 templates = common.templates(TEMPLATES_DIR)
 
@@ -73,6 +78,7 @@ def health() -> dict[str, str]:
 
 
 app.include_router(pages)
+app.include_router(api.router)
 
 
 class GraphToolboxPlugin(AirflowPlugin):
