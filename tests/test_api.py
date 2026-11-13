@@ -11,7 +11,7 @@ from fastapi.dependencies.utils import get_flat_dependant
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
 
-from bluecore_graph_toolbox import __version__
+from bluecore_graph_toolbox import __version__, api
 
 ISSUES = "https://github.com/blue-core-lod/graph-toolbox/issues"
 
@@ -74,6 +74,25 @@ def test_config_sends_only_browser_safe_settings(signed_in_client: TestClient) -
         "public_url": "https://bcld.test",
     }
     assert "internal.test" not in response.text
+
+
+def test_config_version_is_the_toolboxs_even_if_common_sends_one(
+    signed_in_client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # If a later bluecore-airflow-common adds "version" (its own) to
+    # public_config, the route must still answer, with the Toolbox's version.
+    def public_config_with_version(settings: object) -> dict[str, str]:
+        return {"public_url": "https://bcld.test", "version": "0.0.0-common"}
+
+    monkeypatch.setattr(api, "public_config", public_config_with_version)
+
+    response = signed_in_client.get("/api/config")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "version": __version__,
+        "public_url": "https://bcld.test",
+    }
 
 
 def test_no_route_lets_the_browser_choose_an_environment(plugin: ModuleType) -> None:
