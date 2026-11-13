@@ -48,11 +48,33 @@ def test_user_roles_come_from_the_realm_roles() -> None:
         _token({}),
         _token({"realm_access": ["bluecore_admin"]}),
         _token({"realm_access": {}}),
+        _token({"realm_access": {"roles": None}}),
+        _token({"realm_access": {"roles": 42}}),
+        _token({"realm_access": {"roles": "bluecore_admin"}}),
+        _token({"realm_access": {"roles": {"bluecore_admin": True}}}),
     ],
-    ids=["none", "empty", "malformed", "no-claim", "not-a-dict", "no-roles"],
+    ids=[
+        "none",
+        "empty",
+        "malformed",
+        "no-claim",
+        "not-a-dict",
+        "no-roles",
+        "roles-null",
+        "roles-number",
+        "roles-string",
+        "roles-dict",
+    ],
 )
 def test_user_roles_fail_closed(token: str | None) -> None:
     assert deps.user_roles(KeycloakUser(token)) == frozenset()
+
+
+def test_user_roles_skip_entries_that_are_not_strings() -> None:
+    # str() would turn null into a role named "None"; drop such entries instead.
+    token = _token({"realm_access": {"roles": ["cataloger", None, 7, ["x"], {}]}})
+
+    assert deps.user_roles(KeycloakUser(token)) == {"cataloger"}
 
 
 def test_user_without_a_token_attribute_has_no_roles() -> None:

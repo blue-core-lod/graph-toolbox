@@ -42,10 +42,8 @@ class ToolboxConfig(BaseModel):
 
 @router.get("/api/config")
 def config(settings: deps.Settings) -> ToolboxConfig:
-    return ToolboxConfig(
-        **public_config(settings),
-        version=__version__,
-    )
+    # The Toolbox's version wins even if common's public_config adds its own.
+    return ToolboxConfig(**{**public_config(settings), "version": __version__})
 
 
 router.include_router(dashboard)

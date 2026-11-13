@@ -84,7 +84,10 @@ def user_roles(user: GetUserDep) -> frozenset[str]:
     realm_access = claims.get("realm_access")
     if not isinstance(realm_access, dict):
         return frozenset()
-    return frozenset(str(role) for role in realm_access.get("roles", []))
+    roles = realm_access.get("roles")
+    if not isinstance(roles, list):
+        return frozenset()
+    return frozenset(role for role in roles if isinstance(role, str))
 
 
 UserUid = Annotated[str, Depends(user_uid)]
