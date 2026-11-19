@@ -5,8 +5,7 @@ Relative to the plugin's mount point, ``/graph-toolbox``:
 - ``GET /api/config``: browser-safe settings and the signed-in user's ID
 - ``/dashboard``: Dashboard
 - ``/marc-bibframe-operations``: MARC and BIBFRAME operations
-- ``/sparql``: SPARQL Query and Update
-- ``/ai-search``: AI search
+- ``/sparql``: SPARQL Query and Update supported by Blue Core search
 
 Each application's routes live in its own package
 """
@@ -17,7 +16,6 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from bluecore_graph_toolbox import __version__, deps
-from bluecore_graph_toolbox.ai_search.routes import router as ai_search
 from bluecore_graph_toolbox.dashboard.routes import router as dashboard
 from bluecore_graph_toolbox.marc_bibframe_operations.routes import (
     router as marc_bibframe_operations,
@@ -55,4 +53,3 @@ def config(settings: deps.Settings, user_uid: deps.UserUid) -> ToolboxConfig:
 router.include_router(dashboard)
 router.include_router(marc_bibframe_operations)
 router.include_router(sparql)
-router.include_router(ai_search)

@@ -20,7 +20,6 @@ APPLICATIONS = {
     "/dashboard": ("dashboard", f"{ISSUES}/45"),
     "/marc-bibframe-operations": ("marc-bibframe-operations", f"{ISSUES}/46"),
     "/sparql": ("sparql", f"{ISSUES}/54"),
-    "/ai-search": ("ai-search", f"{ISSUES}/39"),
 }
 
 SIGNED_IN_ROUTES = ["/api/config", *APPLICATIONS]

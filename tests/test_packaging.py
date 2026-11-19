@@ -18,7 +18,6 @@ APPLICATION_MODULES = [
     "bluecore_graph_toolbox/dashboard/routes.py",
     "bluecore_graph_toolbox/marc_bibframe_operations/routes.py",
     "bluecore_graph_toolbox/sparql/routes.py",
-    "bluecore_graph_toolbox/ai_search/routes.py",
     "bluecore_graph_toolbox/static/py/saved.py",
 ]
 
