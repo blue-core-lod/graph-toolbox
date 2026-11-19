@@ -72,17 +72,22 @@ def test_config_sends_only_browser_safe_settings(signed_in_client: TestClient) -
     assert response.json() == {
         "version": __version__,
         "public_url": "https://bcld.test",
+        "user_id": "<b>cataloger</b>",
     }
     assert "internal.test" not in response.text
 
 
-def test_config_version_is_the_toolboxs_even_if_common_sends_one(
+def test_config_version_and_user_are_the_toolboxs_even_if_common_sends_them(
     signed_in_client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     # If a later bluecore-airflow-common adds "version" (its own) to
     # public_config, the route must still answer, with the Toolbox's version.
     def public_config_with_version(settings: object) -> dict[str, str]:
-        return {"public_url": "https://bcld.test", "version": "0.0.0-common"}
+        return {
+            "public_url": "https://bcld.test",
+            "version": "0.0.0-common",
+            "user_id": "someone-else",
+        }
 
     monkeypatch.setattr(api, "public_config", public_config_with_version)
 
@@ -92,6 +97,7 @@ def test_config_version_is_the_toolboxs_even_if_common_sends_one(
     assert response.json() == {
         "version": __version__,
         "public_url": "https://bcld.test",
+        "user_id": "<b>cataloger</b>",
     }
 
 
