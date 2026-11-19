@@ -12,8 +12,8 @@ The plugin registers two things with Airflow:
 
 - ``GET /``: landing page (signed in)
 - ``GET /api/config``: browser-safe settings (signed in)
-- ``GET /dashboard``, ``/marc-bibframe-operations``, ``/sparql``,
-  ``/ai-search``: application stubs (signed in), see ``api``
+- ``GET /dashboard``, ``/marc-bibframe-operations``, ``/sparql``:
+  application stubs (signed in), see ``api``
 - ``GET /health``: ``{"status", "version"}`` (public)
 - ``/static/*`` and ``/static/bluecore/*``: assets (public)
 """
