@@ -52,7 +52,6 @@ shows it in an iframe at `/plugin/graph-toolbox`; the app itself is mounted at
 | `GET /graph-toolbox/dashboard` | required | Dashboard (stub, [#45](https://github.com/blue-core-lod/graph-toolbox/issues/45)) |
 | `GET /graph-toolbox/marc-bibframe-operations` | required | MARC and BIBFRAME operations (stub, [#46](https://github.com/blue-core-lod/graph-toolbox/issues/46)) |
 | `GET /graph-toolbox/sparql` | required | SPARQL Query and Update (stub, [#54](https://github.com/blue-core-lod/graph-toolbox/issues/54)) |
-| `GET /graph-toolbox/ai-search` | required | AI-Assisted Search (stub, [#39](https://github.com/blue-core-lod/graph-toolbox/issues/39)) |
 | `GET /graph-toolbox/health` | none | `{"status", "version"}` |
 | `/graph-toolbox/static/…` | none | Toolbox and shared Blue Core assets |
 
