@@ -48,7 +48,7 @@ shows it in an iframe at `/plugin/graph-toolbox`; the app itself is mounted at
 | Route | Sign-in | Purpose |
 |---|---|---|
 | `GET /graph-toolbox/` | required | Landing page |
-| `GET /graph-toolbox/api/config` | required | Browser-safe settings: `{"version", "public_url"}` |
+| `GET /graph-toolbox/api/config` | required | Browser-safe settings: `{"version", "public_url", "user_id"}` |
 | `GET /graph-toolbox/dashboard` | required | Dashboard (stub, [#45](https://github.com/blue-core-lod/graph-toolbox/issues/45)) |
 | `GET /graph-toolbox/marc-bibframe-operations` | required | MARC and BIBFRAME operations (stub, [#46](https://github.com/blue-core-lod/graph-toolbox/issues/46)) |
 | `GET /graph-toolbox/sparql` | required | SPARQL Query and Update (stub, [#54](https://github.com/blue-core-lod/graph-toolbox/issues/54)) |
@@ -97,6 +97,36 @@ containers. Tokens are redacted from the logs.
 The service contracts the Toolbox applications build on are in
 bluecore-airflow-common's
 [integration contracts](https://github.com/blue-core-lod/bluecore-airflow-common/blob/main/docs/integration-contracts.md).
+
+## Saved searches and settings
+Pinned searches and saved job settings are kept only in the browser's
+LocalStorage, never on the server. Every screen uses the one adapter in
+`static/py/saved.py`, loaded with PyScript's `files` config and opened
+with the `user_id` from `/api/config`:
+
+```python
+import saved
+
+store = saved.open_store(config["user_id"])
+store.create(saved.SEARCH, "Recent works", "sparql", {"query": "SELECT ..."})
+```
+
+- Keys are `bluecore:graph-toolbox:v<schema>:<user>:<searches|settings>`, so
+  each signed-in user sees only their own entries. That's tidiness, not
+  authorization: whatever a saved entry runs is still checked by the backend.
+- Entries last across reloads and restarts in the same browser profile, don't
+  sync between browsers, and go when site data is cleared.
+- Only a query and its options, or a job's settings, are saved: never
+  credentials, tokens, MARC files, reports or results. Option keys that look
+  like secrets are refused, and options are limited to 16 KiB.
+- Reads never fail. If storage is blocked or holds unreadable JSON, there's
+  nothing saved. Saves raise `saved.StorageError`, whose message can be shown
+  as is, and leave what was already saved alone. Bad input raises
+  `ValueError` or `TypeError`.
+- Entries for operations this version doesn't know (from a newer Toolbox)
+  are listed with `supported=False`: show them, allow delete, don't run them.
+  Older schema versions are upgraded through `saved.MIGRATIONS` on the next
+  save.
 
 ## Development
 
