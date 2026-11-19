@@ -2,7 +2,7 @@
 
 Relative to the plugin's mount point, ``/graph-toolbox``:
 
-- ``GET /api/config``: browser-safe settings
+- ``GET /api/config``: browser-safe settings and the signed-in user's ID
 - ``/dashboard``: Dashboard
 - ``/marc-bibframe-operations``: MARC and BIBFRAME operations
 - ``/sparql``: SPARQL Query and Update
@@ -38,12 +38,18 @@ class ToolboxConfig(BaseModel):
 
     version: str
     public_url: str
+    # The signed-in user's stable Keycloak subject. Pages use it to keep each
+    # user's saved searches and settings under their own LocalStorage keys.
+    user_id: str
 
 
 @router.get("/api/config")
-def config(settings: deps.Settings) -> ToolboxConfig:
-    # The Toolbox's version wins even if common's public_config adds its own.
-    return ToolboxConfig(**{**public_config(settings), "version": __version__})
+def config(settings: deps.Settings, user_uid: deps.UserUid) -> ToolboxConfig:
+    # The Toolbox's version and the user's ID win even if common's
+    # public_config sends keys of the same name.
+    return ToolboxConfig(
+        **{**public_config(settings), "version": __version__, "user_id": user_uid}
+    )
 
 
 router.include_router(dashboard)
