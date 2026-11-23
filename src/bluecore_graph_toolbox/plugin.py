@@ -34,6 +34,8 @@ from bluecore_graph_toolbox import __version__, api
 
 PLUGIN_NAME = "bluecore_graph_toolbox"
 TITLE = "Blue Core Graph Toolbox"
+# This app's name in the shared Blue Core header (bluecore-airflow-common).
+HEADER_APP = "toolbox"
 
 # The Airflow nav truncates long labels, so the nav item has its own short name.
 NAV_LABEL = "Toolbox"
@@ -66,7 +68,12 @@ def index(request: Request, user: GetUserDep) -> HTMLResponse:
         request=request,
         name="index.html",
         context=common.context(
-            URL_PREFIX, title=TITLE, username=user.get_name(), version=__version__
+            URL_PREFIX,
+            title=TITLE,
+            app_name=HEADER_APP.upper(),
+            current_app=HEADER_APP,
+            username=user.get_name(),
+            version=__version__,
         ),
     )
 

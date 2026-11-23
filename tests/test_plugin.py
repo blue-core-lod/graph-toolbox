@@ -59,6 +59,15 @@ def test_landing_page_shows_signed_in_user(signed_in_client: TestClient) -> None
     assert f"Version {__version__}" in response.text
 
 
+def test_landing_page_names_the_toolbox_in_the_header(
+    signed_in_client: TestClient,
+) -> None:
+    context = signed_in_client.get("/").context
+
+    assert context["app_name"] == "TOOLBOX"
+    assert context["current_app"] == "toolbox"
+
+
 def test_landing_page_links_are_absolute(
     signed_in_client: TestClient, root_path: str
 ) -> None:
