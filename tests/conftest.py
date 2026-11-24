@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import importlib
+import pathlib
 from collections.abc import Iterator
 from types import ModuleType
 
+import pymarc
 import pytest
 from airflow.api_fastapi.core_api.security import get_user
 from bluecore_airflow_common.integration.settings import (
@@ -13,6 +15,7 @@ from bluecore_airflow_common.integration.settings import (
     get_settings,
 )
 from fastapi.testclient import TestClient
+from pymarc.marcxml import record_to_xml
 
 from bluecore_graph_toolbox import plugin as plugin_module
 
@@ -72,6 +75,47 @@ def plugin(root_path: str) -> ModuleType:
 def client(plugin: ModuleType) -> TestClient:
     """A browser with no Airflow cookie."""
     return TestClient(plugin.app)
+
+
+def marc_records(count: int) -> list[pymarc.Record]:
+    """Records numbered from 1, each with an 001 and a title."""
+    records = []
+    for number in range(1, count + 1):
+        record = pymarc.Record()
+        record.add_field(pymarc.Field(tag="001", data=f"rec{number}"))
+        record.add_field(
+            pymarc.Field(
+                tag="245",
+                indicators=pymarc.Indicators("0", "0"),
+                subfields=[pymarc.Subfield("a", f"Title {number}")],
+            )
+        )
+        records.append(record)
+    return records
+
+
+def mrc(count: int) -> bytes:
+    """A binary MARC21 file of ``count`` records."""
+    return b"".join(record.as_marc() for record in marc_records(count))
+
+
+def marcxml(count: int) -> bytes:
+    """A MARC XML file of ``count`` records."""
+    body = b"".join(record_to_xml(r) for r in marc_records(count))
+    return (
+        b'<?xml version="1.0" encoding="UTF-8"?>'
+        b'<collection xmlns="http://www.loc.gov/MARC21/slim">' + body + b"</collection>"
+    )
+
+
+@pytest.fixture
+def uploads_dir(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> pathlib.Path:
+    """An empty uploads volume."""
+    directory = tmp_path / "uploads"
+    monkeypatch.setenv("BLUECORE_UPLOADS_DIR", str(directory))
+    return directory
 
 
 @pytest.fixture

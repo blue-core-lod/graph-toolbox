@@ -18,7 +18,6 @@ ISSUES = "https://github.com/blue-core-lod/graph-toolbox/issues"
 # Each application's path, the name its stub reports, and its ticket.
 APPLICATIONS = {
     "/dashboard": ("dashboard", f"{ISSUES}/45"),
-    "/marc-bibframe-operations": ("marc-bibframe-operations", f"{ISSUES}/46"),
     "/sparql": ("sparql", f"{ISSUES}/54"),
 }
 

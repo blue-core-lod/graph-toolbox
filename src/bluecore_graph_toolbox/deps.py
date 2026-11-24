@@ -10,6 +10,7 @@ clients from the dependencies here, so tests replace them with
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import timedelta
 from typing import Annotated
 
 import jwt
@@ -37,6 +38,14 @@ JOB_DAGS = frozenset({BULK_UPDATE_DAG, MARC_DAG})
 
 # Keycloak realm roles that may see and cancel other users' runs.
 ADMIN_ROLES = frozenset({"bluecore_admin"})
+
+# MARC uploads: binary MARC21 or MARC XML, up to 512 MiB (about 350,000
+# records), converted by the DAG in batches of at most 1,000 records. Uploads
+# not submitted within a day are removed when the same user next uploads.
+MARC_SUFFIXES = frozenset({".mrc", ".xml"})
+MAX_UPLOAD_BYTES = 512 * 1024**2
+BATCH_SIZE = 1000
+UPLOAD_TTL = timedelta(hours=24)
 
 Settings = Annotated[BlueCoreSettings, Depends(get_settings)]
 
