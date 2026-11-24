@@ -47,7 +47,7 @@ shows it in an iframe at `/plugin/graph-toolbox`; the app itself is mounted at
 
 | Route | Sign-in | Purpose |
 |---|---|---|
-| `GET /graph-toolbox/` | required | Landing page |
+| `GET /graph-toolbox/` | required | Dashboard |
 | `GET /graph-toolbox/api/config` | required | Browser-safe settings: `{"version", "public_url", "user_id"}` |
 | `GET /graph-toolbox/dashboard` | required | Dashboard (stub, [#45](https://github.com/blue-core-lod/graph-toolbox/issues/45)) |
 | `GET /graph-toolbox/marc-bibframe-operations` | required | MARC and BIBFRAME operations (stub, [#46](https://github.com/blue-core-lod/graph-toolbox/issues/46)) |
@@ -96,6 +96,41 @@ containers. Tokens are redacted from the logs.
 The service contracts the Toolbox applications build on are in
 bluecore-airflow-common's
 [integration contracts](https://github.com/blue-core-lod/bluecore-airflow-common/blob/main/docs/integration-contracts.md).
+
+## Toolbox pages and the left-hand menu
+
+Every Toolbox page shares one left-hand menu (Dashboard, Search, Import or
+update, Export), defined once in `src/bluecore_graph_toolbox/nav.py` and
+rendered by `templates/toolbox/_nav.html`. A page gets the Blue Core header,
+the menu and the footer by extending `toolbox/base.html` and rendering with
+`nav.page_context`, naming its own menu item so it shows as current:
+
+```python
+templates.TemplateResponse(
+    request=request,
+    name="marc_to_bibframe.html",  # {% extends "toolbox/base.html" %}
+    context=nav.page_context(URL_PREFIX, active="marc-to-bibframe", title=...),
+)
+```
+
+A menu item without a `path` has no page yet: it is shown disabled and marked
+"Coming soon" rather than linking somewhere that doesn't work. When a tool's
+page is ready, give its `NavItem` a `path` (relative to `/graph-toolbox`). Search
+stays plain "Search" until an AI-assisted search service actually exists.
+
+## Dashboard
+
+The Dashboard (`/graph-toolbox/`) has three collapsible sections:
+
+- **Pinned searches** and **Saved settings** come from this browser's
+  LocalStorage (see below), filled in by `static/py/dashboard.py`.
+- **Job status** shows its table and a "coming soon" row until the job API
+  ([#45](https://github.com/blue-core-lod/graph-toolbox/issues/45)) lands.
+
+A saved entry opens on its tool's page with its id in the query string:
+`<Search page>?search=<id>` or `<tool page>?setting=<id>`. The tool page reads it
+back with `store.get(kind, id)`. Until a tool has a page (see the menu), its
+entries are listed but not linked.
 
 ## Saved searches and settings
 Pinned searches and saved job settings are kept only in the browser's

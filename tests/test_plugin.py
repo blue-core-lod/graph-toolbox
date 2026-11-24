@@ -50,13 +50,13 @@ def test_landing_page_requires_sign_in(client: TestClient) -> None:
     assert response.status_code == 401
 
 
-def test_landing_page_shows_signed_in_user(signed_in_client: TestClient) -> None:
-    response = signed_in_client.get("/")
+def test_landing_page_names_the_toolbox_in_the_header(
+    signed_in_client: TestClient,
+) -> None:
+    context = signed_in_client.get("/").context
 
-    assert response.status_code == 200
-    assert "Signed in as &lt;b&gt;cataloger&lt;/b&gt;" in response.text
-    assert "<b>cataloger</b>" not in response.text
-    assert f"Version {__version__}" in response.text
+    assert context["app_name"] == "TOOLBOX"
+    assert context["current_app"] == "toolbox"
 
 
 def test_landing_page_links_are_absolute(
@@ -75,7 +75,9 @@ def test_landing_page_links_are_absolute(
             f"{static}/bluecore/bluecore.css",
             f"{static}/bluecore/bluecore.js",
             f"{static}/toolbox.css",
-            f"{static}/blue-core-v1.svg",
+            f"{static}/collapsible-sections.js",
+            # the left-hand menu's Dashboard item
+            f"{root_path}/graph-toolbox/",
         ]
     )
 

@@ -124,6 +124,20 @@ def test_list_is_most_recently_changed_first(store: saved.SavedStore) -> None:
     assert [e.id for e in store.list(saved.SEARCH)] == [first.id, second.id]
 
 
+def test_a_missing_key_read_as_javascript_null_is_empty(
+    storage: FakeStorage,
+) -> None:
+    # In the browser, getItem for a missing key gives Pyodide's JsNull, not None.
+    class JsNull:
+        pass
+
+    storage.getItem = lambda key: JsNull()
+    store = _store(storage)
+
+    assert store.list(saved.SEARCH) == []
+    assert store.list(saved.SETTING) == []
+
+
 def test_entries_survive_a_reload(storage: FakeStorage) -> None:
     entry = _store(storage).create(saved.SEARCH, "Pinned", "sparql", {"q": "x"})
 

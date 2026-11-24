@@ -4,12 +4,378 @@
  * in bluecore-airflow-common instead.
  */
 
-.toolbox-logo {
-  width: 12rem;
-  height: auto;
+/* Colors from the Toolbox Figma design ("left nav button" component and the
+   left panel). The menu keeps these in both light and dark mode, so it always
+   looks like the design: a grey panel beside the page. */
+:root {
+  --toolbox-nav-bg: #eaeaea;
+  --toolbox-nav-heading: #000;
+  --toolbox-item-bg: #fff;
+  --toolbox-item-border: #1f80e1;
+  --toolbox-item-fg: #24242b;
+  --toolbox-item-hover-bg: #dbf4ff;
+  --toolbox-search-bg: #dbf4ff;
+  --toolbox-current-bg: #003caf;
+  --toolbox-current-fg: #fff;
+  --toolbox-disabled-bg: #f4f4f4;
+  --toolbox-disabled-border: #b9c3cc;
+  --toolbox-disabled-fg: #5f6672;
+  --toolbox-focus: #003caf;
+  --dashboard-rule: #c9c9c9;
+  --dashboard-link: #1565c0;
 }
 
-.toolbox-version {
-  font-size: 1rem;
+/* Toolbox pages always look like the Figma design: light, on white, in
+   Helvetica Neue, even when Airflow or the system is in dark mode. */
+:root:has(body.toolbox) {
+  color-scheme: light;
+}
+
+body.toolbox {
+  --bluecore-fg: #24242b;
+  --bluecore-fg-muted: #5f6672;
+  color-scheme: light;
+  background: #fff;
+  color: var(--bluecore-fg);
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* ---- Page layout: left menu beside the page ------------------------------ */
+
+/* The menu runs the full height between header and footer, so the page's
+   padding moves from <main> onto the page column. */
+body.toolbox .bluecore-main {
+  display: flex;
+  padding: 0;
+}
+
+.toolbox-layout {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.toolbox-page {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  padding: 2rem;
+}
+
+/* ---- Left-hand menu (graph-toolbox #50) ---------------------------------- */
+
+/* 320px panel with 220px buttons, 50px in from each side, as in the design. */
+.toolbox-nav {
+  box-sizing: border-box;
+  flex: none;
+  width: 320px;
+  padding: 40px 50px;
+  background: var(--toolbox-nav-bg);
+}
+
+.toolbox-nav__group + .toolbox-nav__group {
+  margin-top: 56px;
+}
+
+/* "BC H2" in the design: 18/24 regular. */
+.toolbox-nav__heading {
+  margin: 0 0 14px;
+  color: var(--toolbox-nav-heading);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 24px;
+}
+
+.toolbox-nav__list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.toolbox-nav__item {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid var(--toolbox-item-border);
+  border-radius: 2px;
+  background: var(--toolbox-item-bg);
+  color: var(--toolbox-item-fg);
+  font-size: 14px;
+  line-height: 20px;
+  text-decoration: none;
+}
+
+.toolbox-nav__label {
+  white-space: nowrap;
+}
+
+a.toolbox-nav__item:hover {
+  background: var(--toolbox-item-hover-bg);
+}
+
+a.toolbox-nav__item:focus-visible {
+  outline: 2px solid var(--toolbox-focus);
+  outline-offset: 2px;
+}
+
+.toolbox-nav__item[aria-current="page"] {
+  border-color: var(--toolbox-current-bg);
+  background: var(--toolbox-current-bg);
+  color: var(--toolbox-current-fg);
+}
+
+.toolbox-nav__item--search {
+  justify-content: center;
+  background: var(--toolbox-search-bg);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.toolbox-nav__icon {
+  flex: none;
+}
+
+/* A tool without a page yet: visible, but clearly not a working link. */
+.toolbox-nav__item[aria-disabled="true"] {
+  border-color: var(--toolbox-disabled-border);
+  background: var(--toolbox-disabled-bg);
+  color: var(--toolbox-disabled-fg);
+  cursor: not-allowed;
+}
+
+.toolbox-nav__note {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.toolbox-nav__item--search .toolbox-nav__note {
+  margin-left: 4px;
+}
+
+.toolbox-nav__item--search .toolbox-nav__note::before {
+  content: "· ";
+}
+
+/* Narrow screens: the menu sits above the page at full width. */
+@media (max-width: 768px) {
+  .toolbox-layout {
+    flex-direction: column;
+  }
+
+  .toolbox-nav {
+    width: auto;
+    padding: 16px;
+  }
+
+  .toolbox-nav__group + .toolbox-nav__group {
+    margin-top: 20px;
+  }
+
+  .toolbox-nav__heading {
+    margin-bottom: 8px;
+  }
+
+  .toolbox-page {
+    padding: 1.5rem 16px;
+  }
+}
+
+/* ---- Shared bits ----------------------------------------------------------- */
+
+/* An outlined button, like the menu's items ("Use this setting"). */
+.toolbox-button {
+  box-sizing: border-box;
+  display: inline-block;
+  padding: 5px 10px;
+  border: 1px solid var(--toolbox-item-border);
+  border-radius: 2px;
+  background: var(--toolbox-item-bg);
+  color: var(--toolbox-item-fg);
+  font-size: 14px;
+  line-height: 20px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+a.toolbox-button:hover {
+  background: var(--toolbox-item-hover-bg);
+}
+
+.toolbox-button[aria-disabled="true"] {
+  border-color: var(--toolbox-disabled-border);
+  background: var(--toolbox-disabled-bg);
+  color: var(--toolbox-disabled-fg);
+  cursor: not-allowed;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- Dashboard (graph-toolbox #38) --------------------------------------- */
+
+/* The design's content column is about 1000px wide; wider screens get space. */
+.dashboard-title,
+.dashboard-section {
+  max-width: 1000px;
+}
+
+.dashboard-title {
+  margin: 0 0 32px;
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 36px;
+}
+
+.dashboard-section + .dashboard-section {
+  margin-top: 40px;
+}
+
+/* The section heading is the toggle: a blue triangle that turns when closed. */
+.dashboard-section > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.dashboard-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.dashboard-section > summary::before {
+  content: "";
+  flex: none;
+  width: 0;
+  height: 0;
+  border-top: 10px solid var(--toolbox-item-border);
+  border-right: 8px solid transparent;
+  border-left: 8px solid transparent;
+  transition: transform 0.15s;
+}
+
+.dashboard-section:not([open]) > summary::before {
+  transform: rotate(-90deg);
+}
+
+.dashboard-section > summary:focus-visible {
+  outline: 2px solid var(--toolbox-focus);
+  outline-offset: 4px;
+}
+
+.dashboard-section__heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 32px;
+}
+
+.dashboard-pin-icon {
+  flex: none;
+  color: var(--toolbox-item-border);
+}
+
+.dashboard-section__heading .dashboard-pin-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* Wide tables scroll sideways instead of squeezing on narrow screens. */
+.dashboard-table-wrap {
+  overflow-x: auto;
+}
+
+.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.dashboard-table th {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--dashboard-rule);
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.dashboard-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--dashboard-rule);
+  vertical-align: top;
+}
+
+.dashboard-table a:not(.toolbox-button) {
+  color: var(--dashboard-link);
+}
+
+.dashboard-table .dashboard-table__number {
+  text-align: right;
+}
+
+.dashboard-table .dashboard-table__action {
+  width: 1%;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.dashboard-empty {
   color: var(--bluecore-fg-muted);
+}
+
+.dashboard-note {
+  display: block;
+  margin-top: 2px;
+  color: var(--bluecore-fg-muted);
+  font-size: 12px;
+}
+
+.dashboard-unpin {
+  display: inline-flex;
+  padding: 4px;
+  border: 0;
+  border-radius: 2px;
+  background: none;
+  cursor: pointer;
+}
+
+.dashboard-unpin:hover {
+  background: var(--toolbox-item-hover-bg);
+}
+
+.dashboard-unpin:focus-visible,
+.dashboard-table a:focus-visible {
+  outline: 2px solid var(--toolbox-focus);
+  outline-offset: 2px;
+}
+
+/* Unpin and save messages, read out by screen readers. */
+.dashboard-status {
+  min-height: 20px;
+  margin: 8px 0 0;
+  color: var(--bluecore-fg-muted);
+  font-size: 14px;
 }

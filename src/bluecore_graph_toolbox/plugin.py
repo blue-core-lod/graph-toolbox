@@ -10,7 +10,7 @@ The plugin registers two things with Airflow:
 
    Routes, relative to the prefix:
 
-- ``GET /``: landing page (signed in)
+- ``GET /``: Dashboard page (signed in)
 - ``GET /api/config``: browser-safe settings (signed in)
 - ``GET /dashboard``, ``/marc-bibframe-operations``, ``/sparql``:
   application stubs (signed in), see ``api``
@@ -20,17 +20,18 @@ The plugin registers two things with Airflow:
 
 from __future__ import annotations
 
+import hashlib
 import pathlib
 
 import bluecore_airflow_common as common
-from airflow.api_fastapi.core_api.security import GetUserDep
 from airflow.plugins_manager import AirflowPlugin
 from bluecore_airflow_common.integration.auth import install_token_redaction
 from bluecore_airflow_common.integration.errors import install_error_handler
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse
 
-from bluecore_graph_toolbox import __version__, api
+from bluecore_graph_toolbox import __version__, api, deps, nav
+from bluecore_graph_toolbox.dashboard import page as dashboard_page
 
 PLUGIN_NAME = "bluecore_graph_toolbox"
 TITLE = "Blue Core Graph Toolbox"
@@ -43,6 +44,11 @@ NAV_LABEL = "Toolbox"
 # plugins, or Airflow drops the view.
 URL_PREFIX = "/graph-toolbox"
 URL_ROUTE = "graph-toolbox"
+
+# Job status waits for the job API (graph-toolbox #45).
+JOBS_UNAVAILABLE = (
+    "Job status is coming soon. Running and finished jobs will show here."
+)
 
 PACKAGE_DIR = pathlib.Path(__file__).parent
 STATIC_DIR = PACKAGE_DIR / "static"
@@ -59,14 +65,34 @@ templates = common.templates(TEMPLATES_DIR)
 pages = APIRouter(dependencies=[Depends(common.requires_login)])
 
 
+def _browser_module_url(name: str) -> str:
+    """URL of a static/py module, with a hash of its contents.
+
+    PyScript fetches these with fetch(), which the browser caches, so the hash
+    makes a changed file a new URL and the browser never runs stale code.
+    """
+    digest = hashlib.sha256((STATIC_DIR / "py" / name).read_bytes()).hexdigest()
+    return f"{common.static_url(URL_PREFIX, f'py/{name}')}?v={digest[:12]}"
+
+
 @pages.get("/", response_class=HTMLResponse)
-def index(request: Request, user: GetUserDep) -> HTMLResponse:
-    """Render the landing page."""
+def index(request: Request, user_uid: deps.UserUid) -> HTMLResponse:
+    """Render the Toolbox Dashboard (graph-toolbox #38)."""
     return templates.TemplateResponse(
         request=request,
-        name="index.html",
-        context=common.context(
-            URL_PREFIX, title=TITLE, username=user.get_name(), version=__version__
+        name="dashboard.html",
+        context=nav.page_context(
+            URL_PREFIX,
+            active="dashboard",
+            title=TITLE,
+            dashboard_config=dashboard_page.client_config(URL_PREFIX, user_uid),
+            pyscript_config={
+                "files": {
+                    _browser_module_url(name): f"./{name}"
+                    for name in ("saved.py", "dashboard.py")
+                }
+            },
+            jobs_unavailable=JOBS_UNAVAILABLE,
         ),
     )
 

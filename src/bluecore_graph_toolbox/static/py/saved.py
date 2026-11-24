@@ -223,10 +223,13 @@ class SavedStore:
         if self._storage is None:
             return None
         try:
-            return self._storage.getItem(key)
+            value = self._storage.getItem(key)
         except BrowserError:
             # Some browsers throw on every read when storage is blocked.
             return None
+        # A missing key is JavaScript null, which Pyodide passes on as JsNull,
+        # not None, so anything that isn't text counts as nothing saved.
+        return value if isinstance(value, str) else None
 
     def _read(self, kind: str) -> list[Any]:
         """Everything stored for ``kind``, valid or not.

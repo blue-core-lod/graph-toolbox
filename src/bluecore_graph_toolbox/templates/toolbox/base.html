@@ -1,0 +1,27 @@
+{#
+  Layout for every Toolbox page: the shared Blue Core header and footer (from
+  bluecore/base.html) with the Toolbox's left-hand menu beside the page.
+
+    {% extends "toolbox/base.html" %}
+    {% block page %}...{% endblock %}
+
+  Render it with nav.page_context, which supplies the menu and marks the
+  page's own item as current.
+#}
+{% extends "bluecore/base.html" %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ static_url('toolbox.css') }}" />
+{% block page_head %}{% endblock %}
+{% endblock %}
+
+{% block body_class %}toolbox{% endblock %}
+
+{% block content %}
+<div class="toolbox-layout">
+  {% include "toolbox/_nav.html" %}
+  <div class="toolbox-page {% block page_class %}{% endblock %}">
+    {% block page %}{% endblock %}
+  </div>
+</div>
+{% endblock %}
