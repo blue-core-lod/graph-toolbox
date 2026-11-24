@@ -10,7 +10,8 @@ from types import ModuleType
 import lxml.etree as ET
 import pytest
 from airflow.api_fastapi.core_api.security import get_user
-from conftest import StubUser, marcxml, mrc
+from airflow_client.client.exceptions import ApiException
+from conftest import SETTINGS, FakeDagRuns, StubUser, marcxml, mrc
 from fastapi.testclient import TestClient
 
 from bluecore_graph_toolbox import deps
@@ -41,6 +42,7 @@ def _user_files(uploads_dir: pathlib.Path) -> list[str]:
         ("post", "/uploads"),
         ("get", f"/uploads/{'0' * 32}/marcxml"),
         ("delete", f"/uploads/{'0' * 32}"),
+        ("post", "/jobs"),
     ],
 )
 def test_routes_require_sign_in(client: TestClient, method: str, path: str) -> None:
@@ -177,3 +179,113 @@ def test_upload_ids_that_could_not_be_ours_are_not_found(
     response = signed_in_client.get(f"{BASE}/uploads/{upload_id}/marcxml")
 
     assert response.status_code == 404
+
+
+JOB = {
+    "duplicate_policy": "skip_report",
+    "confirmed_policy": "skip_report",
+    "duplicate_report": True,
+    "export_to_lsp": False,
+    "dry_run": True,
+}
+
+
+def test_submit_starts_a_dag_run_with_the_conf_contract(
+    signed_in_client: TestClient, uploads_dir: pathlib.Path, dag_runs: FakeDagRuns
+) -> None:
+    upload_id = _upload(signed_in_client, mrc(1))["upload_id"]
+
+    response = signed_in_client.post(
+        f"{BASE}/jobs", json={**JOB, "upload_id": upload_id}
+    )
+
+    assert response.status_code == 201
+    [(name, (dag_id, body), kwargs)] = dag_runs.calls
+    assert name == "trigger_dag_run"
+    assert dag_id == "marc_to_bibframe"
+    assert kwargs == {"_request_timeout": SETTINGS.request_timeout}
+    assert response.json() == {"job_id": body.dag_run_id, "state": "queued"}
+    assert body.dag_run_id.startswith("toolbox__")
+    assert body.conf == {
+        "user_uid": USER,
+        "marc_file": str(routes.user_dir(USER) / f"{upload_id}.mrc"),
+        "batch_size": 1000,
+        "duplicate_policy": "skip_report",
+        "duplicate_report": True,
+        "export_to_lsp": False,
+        "dry_run": True,
+    }
+
+
+def test_each_submission_is_a_new_run(
+    signed_in_client: TestClient, uploads_dir: pathlib.Path, dag_runs: FakeDagRuns
+) -> None:
+    # A dry run, then the real thing, on the same upload.
+    upload_id = _upload(signed_in_client, mrc(1))["upload_id"]
+    job = {**JOB, "upload_id": upload_id}
+
+    first = signed_in_client.post(f"{BASE}/jobs", json=job).json()["job_id"]
+    second = signed_in_client.post(
+        f"{BASE}/jobs", json={**job, "dry_run": False}
+    ).json()["job_id"]
+
+    assert first != second
+
+
+@pytest.mark.parametrize(
+    "change",
+    [
+        {"confirmed_policy": "replace"},
+        {"duplicate_policy": "export_only", "confirmed_policy": "export_only"},
+        {"duplicate_policy": "merge", "confirmed_policy": "merge"},
+        {"dry_run": "true"},
+        {"ingest": True},
+    ],
+    ids=["unconfirmed", "export-only-without-lsp", "unknown-policy", "string", "extra"],
+)
+def test_invalid_options_never_reach_airflow(
+    signed_in_client: TestClient,
+    uploads_dir: pathlib.Path,
+    dag_runs: FakeDagRuns,
+    change: dict,
+) -> None:
+    upload_id = _upload(signed_in_client, mrc(1))["upload_id"]
+
+    response = signed_in_client.post(
+        f"{BASE}/jobs", json={**JOB, "upload_id": upload_id, **change}
+    )
+
+    assert response.status_code == 422
+    assert dag_runs.calls == []
+
+
+def test_submitting_another_users_upload_is_not_found(
+    plugin: ModuleType,
+    signed_in_client: TestClient,
+    uploads_dir: pathlib.Path,
+    dag_runs: FakeDagRuns,
+) -> None:
+    upload_id = _upload(signed_in_client, mrc(1))["upload_id"]
+    plugin.app.dependency_overrides[get_user] = lambda: StubUser("someone-else")
+
+    response = signed_in_client.post(
+        f"{BASE}/jobs", json={**JOB, "upload_id": upload_id}
+    )
+
+    assert response.status_code == 404
+    assert dag_runs.calls == []
+
+
+def test_airflow_refusing_the_run_returns_the_safe_error(
+    signed_in_client: TestClient, uploads_dir: pathlib.Path, dag_runs: FakeDagRuns
+) -> None:
+    upload_id = _upload(signed_in_client, mrc(1))["upload_id"]
+    dag_runs.error = ApiException(status=403, reason="Forbidden")
+
+    response = signed_in_client.post(
+        f"{BASE}/jobs", json={**JOB, "upload_id": upload_id}
+    )
+
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "forbidden"
+    assert len(dag_runs.calls) == 1

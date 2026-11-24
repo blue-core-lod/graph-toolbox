@@ -5,11 +5,12 @@ from __future__ import annotations
 import importlib
 import pathlib
 from collections.abc import Iterator
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 
 import pymarc
 import pytest
 from airflow.api_fastapi.core_api.security import get_user
+from airflow_client.client import DagRunState
 from bluecore_airflow_common.integration.settings import (
     BlueCoreSettings,
     get_settings,
@@ -17,6 +18,7 @@ from bluecore_airflow_common.integration.settings import (
 from fastapi.testclient import TestClient
 from pymarc.marcxml import record_to_xml
 
+from bluecore_graph_toolbox import deps
 from bluecore_graph_toolbox import plugin as plugin_module
 
 # A deployment's settings. The internal URLs must never reach a response.
@@ -127,3 +129,43 @@ def signed_in_client(plugin: ModuleType) -> Iterator[TestClient]:
     plugin.app.dependency_overrides[get_user] = lambda: StubUser("<b>cataloger</b>")
     yield TestClient(plugin.app)
     plugin.app.dependency_overrides.pop(get_user)
+
+
+class FakeDagRuns:
+    """Stands in for ``DagRunApi``, the Airflow REST client, recording calls.
+
+    ``runs`` holds the runs Airflow knows, by ID; ``error`` is raised by every
+    call when set.
+    """
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, tuple, dict]] = []
+        self.runs: dict[str, SimpleNamespace] = {}
+        self.error: Exception | None = None
+
+    def _record(self, name: str, *args: object, **kwargs: object) -> None:
+        self.calls.append((name, args, kwargs))
+        if self.error:
+            raise self.error
+
+    def trigger_dag_run(self, dag_id: str, body: object, **kwargs: object):
+        self._record("trigger_dag_run", dag_id, body, **kwargs)
+        run = SimpleNamespace(
+            dag_id=dag_id,
+            dag_run_id=body.dag_run_id,
+            conf=body.conf,
+            state=DagRunState.QUEUED,
+            queued_at=None,
+            start_date=None,
+            end_date=None,
+        )
+        self.runs[body.dag_run_id] = run
+        return run
+
+
+@pytest.fixture
+def dag_runs(plugin: ModuleType) -> FakeDagRuns:
+    """The Airflow REST client the routes get, as a fake."""
+    fake = FakeDagRuns()
+    plugin.app.dependency_overrides[deps.dag_runs] = lambda: fake
+    return fake

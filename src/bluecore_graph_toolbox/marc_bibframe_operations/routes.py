@@ -5,9 +5,11 @@ Relative to ``/marc-bibframe-operations``:
 - ``POST /uploads``: store and check a MARC file, and preview its first records
 - ``GET /uploads/{upload_id}/marcxml``: the whole upload as MARC XML
 - ``DELETE /uploads/{upload_id}``: remove an upload that won't be submitted
+- ``POST /jobs``: start a ``marc_to_bibframe`` DAG run on an upload
 
 Uploads are kept on the shared uploads volume under the signed-in user's own
-directory, so one user's upload IDs mean nothing to another.
+directory, so one user's upload IDs mean nothing to another. Jobs are DAG runs,
+started and read only through the Airflow REST API as the signed-in user.
 """
 
 from __future__ import annotations
@@ -16,7 +18,11 @@ import math
 import pathlib
 import re
 import time
+import uuid
+from datetime import UTC, datetime
+from typing import Any
 
+from airflow_client.client import TriggerDAGRunPostBody
 from bluecore_airflow_common.integration import uploads
 from bluecore_airflow_common.integration.errors import NotFound
 from bluecore_airflow_common.integration.reports import safe_parts
@@ -26,6 +32,7 @@ from pydantic import BaseModel
 
 from bluecore_graph_toolbox import deps
 from bluecore_graph_toolbox.marc_bibframe_operations import marc
+from bluecore_graph_toolbox.marc_bibframe_operations.options import MarcJobRequest
 
 router = APIRouter(
     prefix="/marc-bibframe-operations", tags=["marc", "marc-to-bibframe"]
@@ -46,6 +53,13 @@ class Upload(BaseModel):
     sha256: str
     # A MARC XML <collection> of the first PREVIEW_RECORDS records.
     preview_marcxml: str
+
+
+class JobSubmitted(BaseModel):
+    """A DAG run that has been started, and the state Airflow gave it."""
+
+    job_id: str
+    state: str
 
 
 def user_dir(user_uid: str) -> pathlib.Path:
@@ -125,3 +139,47 @@ def delete_upload(upload_id: str, user_uid: deps.UserUid) -> Response:
     """Remove an upload, for a job the user decided not to submit."""
     find_upload(user_uid, upload_id).unlink(missing_ok=True)
     return Response(status_code=204)
+
+
+def job_conf(
+    user_uid: str, marc_file: pathlib.Path, job: MarcJobRequest
+) -> dict[str, Any]:
+    """The ``conf`` a ``marc_to_bibframe`` run is started with.
+
+    This is the contract with the DAG in bluecore-workflows. ``user_uid`` is
+    also what the job routes check ownership against.
+    """
+    return {
+        "user_uid": user_uid,
+        "marc_file": str(marc_file),
+        "batch_size": deps.BATCH_SIZE,
+        **job.settings().model_dump(),
+    }
+
+
+def new_job_id() -> str:
+    """A run ID that sorts by time and can't collide with another submission."""
+    return f"toolbox__{datetime.now(UTC):%Y%m%dT%H%M%S}_{uuid.uuid4().hex[:12]}"
+
+
+@router.post("/jobs", status_code=201)
+def submit_job(
+    job: MarcJobRequest,
+    user_uid: deps.UserUid,
+    dag_runs: deps.DagRuns,
+    settings: deps.Settings,
+) -> JobSubmitted:
+    """Start converting one of the caller's uploads.
+
+    Submitting isn't retried: a failure is returned, and the user decides
+    whether to submit again.
+    """
+    path = find_upload(user_uid, job.upload_id)
+    run = dag_runs.trigger_dag_run(
+        deps.MARC_DAG,
+        TriggerDAGRunPostBody(
+            dag_run_id=new_job_id(), conf=job_conf(user_uid, path, job)
+        ),
+        _request_timeout=settings.request_timeout,
+    )
+    return JobSubmitted(job_id=run.dag_run_id, state=str(run.state.value))
