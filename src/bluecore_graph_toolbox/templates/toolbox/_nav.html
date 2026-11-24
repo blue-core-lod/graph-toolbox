@@ -1,0 +1,45 @@
+{#
+  The Toolbox's left-hand menu (graph-toolbox #50). Rendered by
+  toolbox/base.html from the ``nav`` list that nav.page_context builds.
+
+  - Group headings are real headings, each labelling its list.
+  - The current page's item has aria-current="page".
+  - An item whose page doesn't exist yet is plain text with
+    aria-disabled="true" and a visible note, so it's never a dead link and
+    never takes keyboard focus.
+#}
+<nav class="toolbox-nav" aria-label="Toolbox">
+  {% for group in nav %}
+  <div class="toolbox-nav__group">
+    {% if group.heading %}
+    <h2 class="toolbox-nav__heading" id="toolbox-nav-{{ loop.index }}">{{ group.heading }}</h2>
+    {% endif %}
+    <ul
+      class="toolbox-nav__list"
+      {% if group.heading %}aria-labelledby="toolbox-nav-{{ loop.index }}"{% endif %}
+    >
+      {% for item in group["items"] %}
+      {% set classes = "toolbox-nav__item" ~ (" toolbox-nav__item--search" if item.search else "") %}
+      <li>
+        {% if item.href %}
+        <a
+          class="{{ classes }}"
+          href="{{ item.href }}"
+          {% if item.active %}aria-current="page"{% endif %}
+        >
+          {% if item.search %}{% include "toolbox/_search_icon.html" %}{% endif %}
+          <span class="toolbox-nav__label">{{ item.label }}</span>
+        </a>
+        {% else %}
+        <span class="{{ classes }}" aria-disabled="true">
+          {% if item.search %}{% include "toolbox/_search_icon.html" %}{% endif %}
+          <span class="toolbox-nav__label">{{ item.label }}</span>
+          <span class="toolbox-nav__note">{{ nav_unavailable_note }}</span>
+        </span>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endfor %}
+</nav>

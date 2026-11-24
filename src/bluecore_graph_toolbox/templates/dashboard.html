@@ -1,0 +1,82 @@
+{% extends "toolbox/base.html" %}
+{#
+  Toolbox Dashboard (graph-toolbox #38). The three sections are <details>, so
+  they open and close with no script. static/py/dashboard.py fills in the
+  Pinned searches and Saved settings rows from this browser's LocalStorage.
+  Job status waits for the job API (graph-toolbox #45).
+#}
+
+{% block page_head %}{% include "bluecore/_pyscript.html" %}{% endblock %}
+
+{% block page %}
+<h1 class="dashboard-title">Toolbox dashboard</h1>
+
+<details class="dashboard-section" open>
+  <summary>
+    <h2 class="dashboard-section__heading">
+      Pinned searches {% include "toolbox/_pin_icon.html" %}
+    </h2>
+  </summary>
+  <div class="dashboard-table-wrap">
+    <table class="dashboard-table">
+      <thead>
+        <tr><th scope="col">Search</th><th scope="col" class="dashboard-table__action">Unpin</th></tr>
+      </thead>
+      <tbody id="pinned-searches-rows">
+        <tr><td colspan="2" class="dashboard-empty">Loading pinned searches…</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="dashboard-status" id="pinned-searches-status" role="status"></p>
+</details>
+
+<details class="dashboard-section" open>
+  <summary><h2 class="dashboard-section__heading">Saved settings</h2></summary>
+  <div class="dashboard-table-wrap">
+    <table class="dashboard-table">
+      <thead>
+        <tr>
+          <th scope="col">Setting name</th>
+          <th scope="col">Type</th>
+          <th scope="col">Last modified</th>
+          <th scope="col"><span class="visually-hidden">Open</span></th>
+        </tr>
+      </thead>
+      <tbody id="saved-settings-rows">
+        <tr><td colspan="4" class="dashboard-empty">Loading saved settings…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</details>
+
+<details class="dashboard-section" open>
+  <summary><h2 class="dashboard-section__heading">Job status</h2></summary>
+  <div class="dashboard-table-wrap">
+    <table class="dashboard-table">
+      <thead>
+        <tr>
+          <th scope="col">File name</th>
+          <th scope="col">Status</th>
+          <th scope="col" class="dashboard-table__number"># MARC records</th>
+          <th scope="col" class="dashboard-table__number"># entities</th>
+          <th scope="col">Job profile</th>
+          <th scope="col">User</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="6" class="dashboard-empty">{{ jobs_unavailable }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+</details>
+
+{# The pin icon, cloned by dashboard.py into each Unpin button. #}
+<template id="dashboard-pin-icon">{% include "toolbox/_pin_icon.html" %}</template>
+
+<script type="application/json" id="dashboard-config">{{ dashboard_config | tojson }}</script>
+<script type="py" config='{{ pyscript_config | tojson }}'>
+import dashboard
+
+dashboard.main()
+</script>
+{% endblock %}
