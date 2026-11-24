@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import ast
+import pathlib
 from types import ModuleType
 
 import pytest
@@ -11,6 +13,7 @@ from fastapi.dependencies.utils import get_flat_dependant
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
 
+import bluecore_graph_toolbox
 from bluecore_graph_toolbox import __version__, api
 
 ISSUES = "https://github.com/blue-core-lod/graph-toolbox/issues"
@@ -158,3 +161,30 @@ def test_airflow_errors_return_the_safe_body(
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "forbidden"
     assert response.json()["error"]["upstream_status"] == 403
+
+
+# Modules that would let the plugin read or change DAG runs without the REST
+# API, and so without the signed-in user's permissions.
+AIRFLOW_INTERNALS = (
+    "airflow.models",
+    "airflow.utils.session",
+    "airflow.settings",
+    "airflow.api.common",
+)
+
+
+def _imports(path: pathlib.Path) -> set[str]:
+    names = set()
+    for node in ast.walk(ast.parse(path.read_text())):
+        if isinstance(node, ast.Import):
+            names.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            names.add(node.module)
+    return names
+
+
+def test_dags_are_reached_only_through_the_airflow_rest_api() -> None:
+    package = pathlib.Path(bluecore_graph_toolbox.__file__).parent
+    for path in package.rglob("*.py"):
+        for name in _imports(path):
+            assert not name.startswith(AIRFLOW_INTERNALS), f"{path.name}: {name}"

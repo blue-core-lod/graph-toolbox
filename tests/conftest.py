@@ -11,6 +11,7 @@ import pymarc
 import pytest
 from airflow.api_fastapi.core_api.security import get_user
 from airflow_client.client import DagRunState
+from airflow_client.client.exceptions import ApiException
 from bluecore_airflow_common.integration.settings import (
     BlueCoreSettings,
     get_settings,
@@ -121,6 +122,16 @@ def uploads_dir(
 
 
 @pytest.fixture
+def reports_dir(
+    tmp_path: pathlib.Path, monkeypatch: pytest.MonkeyPatch
+) -> pathlib.Path:
+    """An empty reports volume."""
+    directory = tmp_path / "reports"
+    monkeypatch.setenv("BLUECORE_REPORTS_DIR", str(directory))
+    return directory
+
+
+@pytest.fixture
 def signed_in_client(plugin: ModuleType) -> Iterator[TestClient]:
     """A browser whose Airflow cookie resolved to a user.
 
@@ -160,6 +171,34 @@ class FakeDagRuns:
             end_date=None,
         )
         self.runs[body.dag_run_id] = run
+        return run
+
+    def get_dag_run(self, dag_id: str, dag_run_id: str, **kwargs: object):
+        self._record("get_dag_run", dag_id, dag_run_id, **kwargs)
+        return self._run(dag_id, dag_run_id)
+
+    def patch_dag_run(self, dag_id: str, dag_run_id: str, body, **kwargs: object):
+        self._record("patch_dag_run", dag_id, dag_run_id, body, **kwargs)
+        run = self._run(dag_id, dag_run_id)
+        run.state = DagRunState(body.state.value)
+        return run
+
+    def add(self, dag_run_id: str, state: str = "running", **conf: object):
+        """A run Airflow already has."""
+        self.runs[dag_run_id] = SimpleNamespace(
+            dag_id=deps.MARC_DAG,
+            dag_run_id=dag_run_id,
+            conf=conf,
+            state=DagRunState(state),
+            queued_at=None,
+            start_date=None,
+            end_date=None,
+        )
+
+    def _run(self, dag_id: str, dag_run_id: str) -> SimpleNamespace:
+        run = self.runs.get(dag_run_id)
+        if run is None or run.dag_id != dag_id:
+            raise ApiException(status=404, reason="Not Found")
         return run
 
 

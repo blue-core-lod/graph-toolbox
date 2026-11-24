@@ -289,3 +289,202 @@ def test_airflow_refusing_the_run_returns_the_safe_error(
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "forbidden"
     assert len(dag_runs.calls) == 1
+
+
+RUN = "toolbox__20261124T120000_abc"
+OPTIONS = {k: v for k, v in JOB.items() if k != "confirmed_policy"}
+
+
+def _admin(plugin: ModuleType) -> None:
+    plugin.app.dependency_overrides[deps.user_roles] = lambda: frozenset(
+        {"bluecore_admin"}
+    )
+
+
+def _report(reports_dir: pathlib.Path, name: str, text: str = "status\n") -> None:
+    directory = reports_dir / "marc_to_bibframe" / RUN
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / name).write_text(text)
+
+
+@pytest.mark.parametrize(
+    ("method", "path"),
+    [
+        ("get", f"/jobs/{RUN}"),
+        ("post", f"/jobs/{RUN}/cancel"),
+        ("get", f"/jobs/{RUN}/reports/import"),
+    ],
+)
+def test_job_routes_require_sign_in(client: TestClient, method: str, path: str) -> None:
+    assert client.request(method, f"{BASE}{path}").status_code == 401
+
+
+def test_job_shows_state_options_and_available_reports(
+    signed_in_client: TestClient, reports_dir: pathlib.Path, dag_runs: FakeDagRuns
+) -> None:
+    dag_runs.add(RUN, "success", user_uid=USER, marc_file="/x.mrc", **OPTIONS)
+    _report(reports_dir, "import.csv")
+
+    response = signed_in_client.get(f"{BASE}/jobs/{RUN}")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "job_id": RUN,
+        "state": "success",
+        "options": OPTIONS,
+        "queued_at": None,
+        "started_at": None,
+        "ended_at": None,
+        "reports": ["import"],
+    }
+    [(name, (dag_id, run_id), kwargs)] = dag_runs.calls
+    assert (name, dag_id, run_id) == ("get_dag_run", "marc_to_bibframe", RUN)
+    assert kwargs == {"_request_timeout": SETTINGS.request_timeout}
+
+
+def test_a_run_without_toolbox_options_has_none(
+    signed_in_client: TestClient, reports_dir: pathlib.Path, dag_runs: FakeDagRuns
+) -> None:
+    dag_runs.add(RUN, user_uid=USER, marc_file="/x.mrc", ingest=True)
+
+    assert signed_in_client.get(f"{BASE}/jobs/{RUN}").json()["options"] is None
+
+
+def test_another_users_job_is_not_found(
+    signed_in_client: TestClient, reports_dir: pathlib.Path, dag_runs: FakeDagRuns
+) -> None:
+    dag_runs.add(RUN, user_uid="someone-else", **OPTIONS)
+    _report(reports_dir, "import.csv")
+
+    for method, path in [
+        ("get", f"/jobs/{RUN}"),
+        ("post", f"/jobs/{RUN}/cancel"),
+        ("get", f"/jobs/{RUN}/reports/import"),
+    ]:
+        assert signed_in_client.request(method, f"{BASE}{path}").status_code == 404
+    assert [call[0] for call in dag_runs.calls] == ["get_dag_run"] * 3
+    assert dag_runs.runs[RUN].state == "running"
+
+
+def test_a_run_with_no_owner_is_not_found(
+    signed_in_client: TestClient, reports_dir: pathlib.Path, dag_runs: FakeDagRuns
+) -> None:
+    dag_runs.add(RUN, **OPTIONS)
+
+    assert signed_in_client.get(f"{BASE}/jobs/{RUN}").status_code == 404
+
+
+def test_admins_see_and_cancel_other_users_jobs(
+    plugin: ModuleType,
+    signed_in_client: TestClient,
+    reports_dir: pathlib.Path,
+    dag_runs: FakeDagRuns,
+) -> None:
+    dag_runs.add(RUN, user_uid="someone-else", **OPTIONS)
+    _admin(plugin)
+
+    assert signed_in_client.get(f"{BASE}/jobs/{RUN}").status_code == 200
+    response = signed_in_client.post(f"{BASE}/jobs/{RUN}/cancel")
+    assert response.json()["state"] == "failed"
+
+
+def test_a_job_airflow_does_not_have_is_not_found(
+    signed_in_client: TestClient, reports_dir: pathlib.Path, dag_runs: FakeDagRuns
+) -> None:
+    response = signed_in_client.get(f"{BASE}/jobs/{RUN}")
+
+    assert response.status_code == 404
+    assert response.json()["error"]["code"] == "not_found"
+
+
+@pytest.mark.parametrize("state", ["queued", "running"])
+def test_cancel_stops_an_unfinished_run(
+    signed_in_client: TestClient,
+    reports_dir: pathlib.Path,
+    dag_runs: FakeDagRuns,
+    state: str,
+) -> None:
+    dag_runs.add(RUN, state, user_uid=USER, **OPTIONS)
+
+    response = signed_in_client.post(f"{BASE}/jobs/{RUN}/cancel")
+
+    assert response.status_code == 200
+    assert response.json()["state"] == "failed"
+    [_, (name, (dag_id, run_id, body), kwargs)] = dag_runs.calls
+    assert (name, dag_id, run_id) == ("patch_dag_run", "marc_to_bibframe", RUN)
+    assert body.state.value == "failed"
+    assert kwargs == {"_request_timeout": SETTINGS.request_timeout}
+
+
+@pytest.mark.parametrize("state", ["success", "failed"])
+def test_cancel_leaves_a_finished_run_as_it_is(
+    signed_in_client: TestClient,
+    reports_dir: pathlib.Path,
+    dag_runs: FakeDagRuns,
+    state: str,
+) -> None:
+    dag_runs.add(RUN, state, user_uid=USER, **OPTIONS)
+
+    response = signed_in_client.post(f"{BASE}/jobs/{RUN}/cancel")
+
+    assert response.json()["state"] == state
+    assert [call[0] for call in dag_runs.calls] == ["get_dag_run"]
+
+
+@pytest.mark.parametrize(
+    ("name", "filename"), [("import", "import.csv"), ("duplicates", "duplicates.csv")]
+)
+def test_reports_download_as_csv(
+    signed_in_client: TestClient,
+    reports_dir: pathlib.Path,
+    dag_runs: FakeDagRuns,
+    name: str,
+    filename: str,
+) -> None:
+    dag_runs.add(RUN, "success", user_uid=USER, **OPTIONS)
+    _report(reports_dir, filename, "status,title\ncreated,Title 1\n")
+
+    response = signed_in_client.get(f"{BASE}/jobs/{RUN}/reports/{name}")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")
+    assert f"{RUN}-{name}.csv" in response.headers["content-disposition"]
+    assert response.text == "status,title\ncreated,Title 1\n"
+
+
+def test_a_report_not_written_yet_is_not_found(
+    signed_in_client: TestClient, reports_dir: pathlib.Path, dag_runs: FakeDagRuns
+) -> None:
+    dag_runs.add(RUN, user_uid=USER, **OPTIONS)
+
+    response = signed_in_client.get(f"{BASE}/jobs/{RUN}/reports/import")
+
+    assert response.status_code == 404
+
+
+@pytest.mark.parametrize("name", ["report.json", "index.html", "import.csv"])
+def test_only_named_reports_can_be_downloaded(
+    signed_in_client: TestClient,
+    reports_dir: pathlib.Path,
+    dag_runs: FakeDagRuns,
+    name: str,
+) -> None:
+    dag_runs.add(RUN, user_uid=USER, **OPTIONS)
+    _report(reports_dir, "report.json", "{}")
+
+    response = signed_in_client.get(f"{BASE}/jobs/{RUN}/reports/{name}")
+
+    assert response.status_code in (404, 422)
+    assert response.text != "{}"
+
+
+@pytest.mark.parametrize("job_id", ["..", "%2e%2e", "..%2f..%2fetc"])
+def test_job_ids_that_could_escape_are_not_found(
+    signed_in_client: TestClient,
+    reports_dir: pathlib.Path,
+    dag_runs: FakeDagRuns,
+    job_id: str,
+) -> None:
+    response = signed_in_client.get(f"{BASE}/jobs/{job_id}/reports/import")
+
+    assert response.status_code == 404
