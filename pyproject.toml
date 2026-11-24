@@ -48,6 +48,7 @@ packages = ["src/bluecore_graph_toolbox"]
 include = [
     "src/bluecore_graph_toolbox",
     "tests",
+    "docs/openapi.json",
     "README.md",
     "LICENSE-2.0.txt",
 ]

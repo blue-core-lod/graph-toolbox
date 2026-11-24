@@ -50,7 +50,7 @@ shows it in an iframe at `/plugin/graph-toolbox`; the app itself is mounted at
 | `GET /graph-toolbox/` | required | Landing page |
 | `GET /graph-toolbox/api/config` | required | Browser-safe settings: `{"version", "public_url", "user_id"}` |
 | `GET /graph-toolbox/dashboard` | required | Dashboard (stub, [#45](https://github.com/blue-core-lod/graph-toolbox/issues/45)) |
-| `GET /graph-toolbox/marc-bibframe-operations` | required | MARC and BIBFRAME operations (stub, [#46](https://github.com/blue-core-lod/graph-toolbox/issues/46)) |
+| `/graph-toolbox/marc-bibframe-operations/…` | required | MARC to BIBFRAME uploads and jobs, see [below](#marc-to-bibframe-jobs) |
 | `GET /graph-toolbox/sparql` | required | SPARQL Query and Update (stub, [#54](https://github.com/blue-core-lod/graph-toolbox/issues/54)) |
 | `GET /graph-toolbox/health` | none | `{"status", "version"}` |
 | `/graph-toolbox/static/…` | none | Toolbox and shared Blue Core assets |
@@ -58,7 +58,14 @@ shows it in an iframe at `/plugin/graph-toolbox`; the app itself is mounted at
 Each stub answers `{"application", "implemented": false, "issue"}` until its
 ticket replaces it. Errors from every route use one shape,
 `{"error": {"code", "message", "upstream_status", "request_id"}}`; details
-are logged under the `request_id`, never returned.
+are logged under the `request_id`, never returned. The exception is a request
+FastAPI can't parse (a missing field, a wrong type), which gets FastAPI's
+own 422 body, `{"detail": [...]}`, naming each field at fault.
+
+The routes and their request and response shapes are in
+[`docs/openapi.json`](docs/openapi.json). The plugin doesn't serve it;
+regenerate it with `uv run python scripts/openapi.py` after changing a route,
+and a test fails until you do.
 
 Sign-in is Airflow's own: the page uses Airflow's JWT cookie (Keycloak in a
 Blue Core stack), and the Toolbox has no login of its own.
@@ -97,6 +104,86 @@ The service contracts the Toolbox applications build on are in
 bluecore-airflow-common's
 [integration contracts](https://github.com/blue-core-lod/bluecore-airflow-common/blob/main/docs/integration-contracts.md).
 
+## MARC to BIBFRAME jobs
+
+The MARC to BIBFRAME page (#40) uploads a MARC file, previews it, and submits
+it to the `marc_to_bibframe` DAG in
+[bluecore-workflows](https://github.com/blue-core-lod/bluecore-workflows),
+which does the conversion (with
+[marc-bibframe](https://github.com/blue-core-lod/marc-bibframe)), duplicate
+matching, saving to Blue Core, LSP export and the reports. The Toolbox checks
+what it's given and passes it on. Every call to the DAG goes through the
+Airflow REST API as the signed-in user. Relative to
+`/graph-toolbox/marc-bibframe-operations`:
+
+| Route | Purpose |
+|---|---|
+| `POST /uploads` | Multipart `file`, a `.mrc` or `.xml` file. Returns `{"upload_id", "filename", "record_count", "batch_count", "sha256", "preview_marcxml"}` |
+| `GET /uploads/{upload_id}/marcxml` | The whole upload as one MARC XML collection |
+| `DELETE /uploads/{upload_id}` | Drop an upload that won't be submitted |
+| `POST /jobs` | Start a run on an upload. Returns `{"job_id", "state"}` |
+| `GET /jobs/{job_id}` | `{"job_id", "state", "options", "queued_at", "started_at", "ended_at", "reports"}` |
+| `POST /jobs/{job_id}/cancel` | Stop a queued or running run; returns the job as above |
+| `GET /jobs/{job_id}/reports/{import\|duplicates}` | Download a report as CSV |
+
+[`examples/marc-bibframe.sh`](examples/marc-bibframe.sh) runs through all of
+them with curl.
+
+**Uploads.** Binary MARC21 (`.mrc`) or MARC XML (`.xml`), up to 512 MiB.
+Which one a file is comes from its content, and it has to match the suffix.
+Every record is read before the upload is accepted; if one can't be, the
+upload is refused with a 422 naming that record's position, and nothing is
+kept. The preview is the first ten records. `batch_count` is how many runs of
+at most 1,000 records the DAG will make. Uploads are kept under the user's own
+directory on the uploads volume, so another user's `upload_id` is a 404. An
+upload not deleted is removed a day after it was made, the next time the same
+user uploads, so a job should be submitted within a day of its upload.
+
+**Options.** `POST /jobs` takes:
+
+```json
+{
+  "upload_id": "…",
+  "duplicate_policy": "create_new | export_only | replace | skip_report",
+  "confirmed_policy": "the same policy, as the user confirmed it",
+  "duplicate_report": true,
+  "export_to_lsp": false,
+  "dry_run": true
+}
+```
+
+Every field is required and must be the right JSON type; unknown fields are
+refused. `confirmed_policy` must equal `duplicate_policy`, and `export_only`
+needs `export_to_lsp`. A refused submission never reaches Airflow. Each
+submission is a new run, so a dry run and then the real run can use the same
+upload.
+
+**What the DAG gets.** The run's `conf`, the contract with the DAG:
+
+```json
+{
+  "user_uid": "the Keycloak subject of the user who submitted it",
+  "marc_file": "/opt/airflow/uploads/graph-toolbox/<user>/<upload_id>.mrc",
+  "batch_size": 1000,
+  "duplicate_policy": "skip_report",
+  "duplicate_report": true,
+  "export_to_lsp": false,
+  "dry_run": true
+}
+```
+
+The DAG is expected to write `import.csv` (always) and `duplicates.csv` (when
+`duplicate_report` is set) to `reports/marc_to_bibframe/<run_id>/` on the
+reports volume. How long reports are kept is up to bluecore-workflows.
+
+**Jobs.** A run is visible only to the user whose `user_uid` started it and to
+users with the `bluecore_admin` realm role; to anyone else it's a 404.
+Cancelling marks a queued or running run failed, which stops its remaining
+tasks, and returns the state Airflow then reports. Batches that finished
+before the cancel keep what they did: nothing is undone. A finished run is
+returned unchanged. Cancelling before submission is just `DELETE`ing the
+upload.
+
 ## Saved searches and settings
 Pinned searches and saved job settings are kept only in the browser's
 LocalStorage, never on the server. Every screen uses the one adapter in
@@ -122,6 +209,8 @@ store.create(saved.SEARCH, "Recent works", "sparql", {"query": "SELECT ..."})
   nothing saved. Saves raise `saved.StorageError`, whose message can be shown
   as is, and leave what was already saved alone. Bad input raises
   `ValueError` or `TypeError`.
+- A `marc-to-bibframe` setting's options are the `POST /jobs` body without
+  `upload_id` and `confirmed_policy`. Submitting them still checks them.
 - Entries for operations this version doesn't know (from a newer Toolbox)
   are listed with `supported=False`: show them, allow delete, don't run them.
   Older schema versions are upgraded through `saved.MIGRATIONS` on the next

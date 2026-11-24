@@ -50,8 +50,27 @@ from bluecore_graph_toolbox.marc_bibframe_operations.options import (
     MarcJobSettings,
 )
 
+
+class ErrorDetail(BaseModel):
+    code: str
+    message: str
+    upstream_status: int | None
+    request_id: str
+
+
+class Error(BaseModel):
+    """The body install_error_handler returns for every refused request.
+
+    Declared here only so the OpenAPI document shows it.
+    """
+
+    error: ErrorDetail
+
+
 router = APIRouter(
-    prefix="/marc-bibframe-operations", tags=["marc", "marc-to-bibframe"]
+    prefix="/marc-bibframe-operations",
+    tags=["marc", "marc-to-bibframe"],
+    responses={status: {"model": Error} for status in (401, 403, 404, 413, 502, 504)},
 )
 
 # The random name stage_upload gives a file, without its suffix.
