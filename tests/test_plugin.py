@@ -75,6 +75,7 @@ def test_landing_page_links_are_absolute(
             f"{static}/bluecore/bluecore.css",
             f"{static}/bluecore/bluecore.js",
             f"{static}/toolbox.css",
+            f"{static}/collapsible-sections.js",
             # the left-hand menu's Dashboard item
             f"{root_path}/graph-toolbox/",
         ]

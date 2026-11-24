@@ -48,11 +48,27 @@ def test_dashboard_has_heading_and_three_collapsible_sections(
 ) -> None:
     assert '<h1 class="dashboard-title">Toolbox dashboard</h1>' in dashboard_html
     headings = re.findall(
-        r'<details class="dashboard-section" open>\s*<summary>\s*'
+        r'<details class="dashboard-section" id="[^"]+" data-remember open>\s*'
+        r"<summary>\s*"
         r'<h2 class="dashboard-section__heading">\s*([^<]+?)\s*<',
         dashboard_html,
     )
     assert headings == ["Pinned searches", "Saved settings", "Job status"]
+
+
+def test_sections_remember_open_or_closed(dashboard_html: str, root_path: str) -> None:
+    ids = re.findall(
+        r'<details class="dashboard-section" id="([^"]+)" data-remember', dashboard_html
+    )
+    assert ids == ["pinned-searches", "saved-settings", "job-status"]
+    assert (
+        f'<script src="{root_path}/graph-toolbox/static/collapsible-sections.js"></script>'
+        in (dashboard_html)
+    )
+
+
+def test_section_memory_script_is_served(client: TestClient) -> None:
+    assert client.get("/static/collapsible-sections.js").status_code == 200
 
 
 def test_table_headers_match_the_design(dashboard_html: str) -> None:
