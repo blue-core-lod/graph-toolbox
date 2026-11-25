@@ -174,7 +174,14 @@ upload.
 
 The DAG is expected to write `import.csv` (always) and `duplicates.csv` (when
 `duplicate_report` is set) to `reports/marc_to_bibframe/<run_id>/` on the
-reports volume. How long reports are kept is up to bluecore-workflows.
+reports volume. How long reports are kept is up to bluecore-workflows. The
+DAG's side of this contract is
+[bluecore-workflows#238](https://github.com/blue-core-lod/bluecore-workflows/issues/238).
+
+Like uploads, reports pass between the DAG and the Toolbox on a shared
+volume, `$BLUECORE_REPORTS_DIR` (default `/opt/airflow/reports`), rather
+than through XCom. It has to be mounted in the Airflow API server, where the
+Toolbox runs, as well as in the workers.
 
 **Jobs.** A run is visible only to the user whose `user_uid` started it and to
 users with the `bluecore_admin` realm role; to anyone else it's a 404.
