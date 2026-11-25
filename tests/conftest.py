@@ -177,6 +177,38 @@ class FakeDagRuns:
         self._record("get_dag_run", dag_id, dag_run_id, **kwargs)
         return self._run(dag_id, dag_run_id)
 
+    def get_dag_runs(
+        self,
+        dag_id: str,
+        run_id_prefix_pattern: str = "",
+        limit: int = 50,
+        cursor: str = "",
+        **kwargs: object,
+    ):
+        """Runs newest first, taking the most recently added as the newest.
+
+        The cursor is just the position of the next page.
+        """
+        self._record(
+            "get_dag_runs",
+            dag_id,
+            run_id_prefix_pattern=run_id_prefix_pattern,
+            limit=limit,
+            cursor=cursor,
+            **kwargs,
+        )
+        runs = [
+            run
+            for run in reversed(self.runs.values())
+            if run.dag_id == dag_id and run.dag_run_id.startswith(run_id_prefix_pattern)
+        ]
+        start = int(cursor or 0)
+        end = start + limit
+        return SimpleNamespace(
+            dag_runs=runs[start:end],
+            next_cursor=str(end) if end < len(runs) else None,
+        )
+
     def patch_dag_run(self, dag_id: str, dag_run_id: str, body, **kwargs: object):
         self._record("patch_dag_run", dag_id, dag_run_id, body, **kwargs)
         run = self._run(dag_id, dag_run_id)

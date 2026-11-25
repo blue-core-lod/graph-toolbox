@@ -121,8 +121,9 @@ Airflow REST API as the signed-in user. Relative to
 | `POST /uploads` | Multipart `file`, a `.mrc` or `.xml` file. Returns `{"upload_id", "filename", "record_count", "batch_count", "sha256", "preview_marcxml"}` |
 | `GET /uploads/{upload_id}/marcxml` | The whole upload as one MARC XML collection |
 | `DELETE /uploads/{upload_id}` | Drop an upload that won't be submitted |
+| `GET /jobs?limit=&cursor=` | Runs the Toolbox started, newest first: `{"jobs": [job, …], "next_cursor"}` |
 | `POST /jobs` | Start a run on an upload. Returns `{"job_id", "state"}` |
-| `GET /jobs/{job_id}` | `{"job_id", "state", "options", "queued_at", "started_at", "ended_at", "reports"}` |
+| `GET /jobs/{job_id}` | `{"job_id", "user_uid", "state", "options", "queued_at", "started_at", "ended_at", "reports"}` |
 | `POST /jobs/{job_id}/cancel` | Stop a queued or running run; returns the job as above |
 | `GET /jobs/{job_id}/reports/{import\|duplicates}` | Download a report as CSV |
 
@@ -135,9 +136,9 @@ Every record is read before the upload is accepted; if one can't be, the
 upload is refused with a 422 naming that record's position, and nothing is
 kept. The preview is the first ten records. `batch_count` is how many runs of
 at most 1,000 records the DAG will make. Uploads are kept under the user's own
-directory on the uploads volume, so another user's `upload_id` is a 404. An
-upload not deleted is removed a day after it was made, the next time the same
-user uploads, so a job should be submitted within a day of its upload.
+directory on the uploads volume, so another user's `upload_id` is a 404.
+The Toolbox never removes an upload on its own; it stays until it's
+`DELETE`d. How long uploads and reports are kept hasn't been decided yet.
 
 **Options.** `POST /jobs` takes:
 
@@ -183,7 +184,12 @@ volume, `$BLUECORE_REPORTS_DIR` (default `/opt/airflow/reports`), rather
 than through XCom. It has to be mounted in the Airflow API server, where the
 Toolbox runs, as well as in the workers.
 
-**Jobs.** A run is visible only to the user whose `user_uid` started it and to
+**Jobs.** `GET /jobs` lists every run the Toolbox started (run IDs beginning
+`toolbox__`), whoever started it, to anyone signed in whom Airflow lets read
+`marc_to_bibframe` runs. It's read only. A page holds `limit` jobs (default
+25, at most 100); pass `next_cursor` back as `cursor` for the next page, until
+it's `null`. Opening a run with `GET /jobs/{job_id}`, cancelling it and
+downloading its reports are only for the user whose `user_uid` started it and
 users with the `bluecore_admin` realm role; to anyone else it's a 404.
 Cancelling marks a queued or running run failed, which stops its remaining
 tasks, and returns the state Airflow then reports. Batches that finished

@@ -5,6 +5,7 @@ Relative to ``/marc-bibframe-operations``:
 - ``POST /uploads``: store and check a MARC file, and preview its first records
 - ``GET /uploads/{upload_id}/marcxml``: the whole upload as MARC XML
 - ``DELETE /uploads/{upload_id}``: remove an upload that won't be submitted
+- ``GET /jobs``: the runs the Toolbox has started, newest first
 - ``POST /jobs``: start a ``marc_to_bibframe`` DAG run on an upload
 - ``GET /jobs/{job_id}``: a run's state, options and which reports it has
 - ``POST /jobs/{job_id}/cancel``: stop a run that hasn't finished
@@ -12,9 +13,10 @@ Relative to ``/marc-bibframe-operations``:
 
 Uploads are kept on the shared uploads volume under the signed-in user's own
 directory, so one user's upload IDs mean nothing to another. Jobs are DAG runs,
-started and read only through the Airflow REST API as the signed-in user. A
-run is only visible to the user who started it and to admins; to anyone else
-it doesn't exist.
+started and read only through the Airflow REST API as the signed-in user.
+Anyone signed in can list every run; a run's details, cancelling it and its
+reports are only for the user who started it and for admins, and to anyone
+else the run doesn't exist.
 """
 
 from __future__ import annotations
@@ -22,7 +24,6 @@ from __future__ import annotations
 import math
 import pathlib
 import re
-import time
 import uuid
 from datetime import UTC, datetime
 from typing import Any, Literal
@@ -39,7 +40,7 @@ from bluecore_airflow_common.integration import reports, uploads
 from bluecore_airflow_common.integration.errors import NotFound
 from bluecore_airflow_common.integration.reports import safe_parts
 from bluecore_airflow_common.integration.settings import BlueCoreSettings
-from fastapi import APIRouter, Response, UploadFile
+from fastapi import APIRouter, Query, Response, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 
@@ -81,6 +82,14 @@ UPLOAD_ID = re.compile(r"[0-9a-f]{32}")
 ReportName = Literal["import", "duplicates"]
 REPORT_FILES: dict[str, str] = {"import": "import.csv", "duplicates": "duplicates.csv"}
 
+# Every run the Toolbox starts has an ID with this prefix, so listing can leave
+# out runs started some other way, such as from the Airflow UI.
+JOB_ID_PREFIX = "toolbox__"
+
+# Most runs one GET /jobs returns. Airflow's own [api] maximum_page_limit,
+# 100 by default, caps it again.
+MAX_JOBS_PAGE = 100
+
 # States a run can still be stopped in. A finished run is never marked failed,
 # so cancelling can't relabel work that's already done.
 UNFINISHED = frozenset({DagRunState.QUEUED, DagRunState.RUNNING})
@@ -110,6 +119,8 @@ class Job(BaseModel):
     """A run as the UI shows it."""
 
     job_id: str
+    # The Keycloak subject of the user who started it, if it's recorded.
+    user_uid: str | None
     state: str
     # The options the run was started with, or none for a run the Toolbox
     # didn't start.
@@ -119,6 +130,14 @@ class Job(BaseModel):
     ended_at: datetime | None
     # The reports that can be downloaded now, from /jobs/{job_id}/reports/{name}.
     reports: list[ReportName]
+
+
+class JobList(BaseModel):
+    """One page of runs, newest first."""
+
+    jobs: list[Job]
+    # Pass as ``cursor`` for the next page; none when this is the last.
+    next_cursor: str | None
 
 
 def user_dir(user_uid: str) -> pathlib.Path:
@@ -140,20 +159,9 @@ def find_upload(user_uid: str, upload_id: str) -> pathlib.Path:
     raise NotFound(f"no upload {upload_id!r} for this user")
 
 
-def remove_expired(directory: pathlib.Path, now: float | None = None) -> None:
-    """Delete files in the directory older than UPLOAD_TTL."""
-    cutoff = (now or time.time()) - deps.UPLOAD_TTL.total_seconds()
-    if not directory.is_dir():
-        return
-    for path in directory.iterdir():
-        if path.is_file() and path.stat().st_mtime < cutoff:
-            path.unlink(missing_ok=True)
-
-
 @router.post("/uploads", status_code=201)
 def create_upload(file: UploadFile, user_uid: deps.UserUid) -> Upload:
     """Store a MARC file for a later job, after checking every record reads."""
-    remove_expired(user_dir(user_uid))
     filename = file.filename or ""
     path, sha256 = uploads.stage_upload(
         file.file,
@@ -218,7 +226,7 @@ def job_conf(
 
 def new_job_id() -> str:
     """A run ID that sorts by time and can't collide with another submission."""
-    return f"toolbox__{datetime.now(UTC):%Y%m%dT%H%M%S}_{uuid.uuid4().hex[:12]}"
+    return f"{JOB_ID_PREFIX}{datetime.now(UTC):%Y%m%dT%H%M%S}_{uuid.uuid4().hex[:12]}"
 
 
 @router.post("/jobs", status_code=201)
@@ -275,9 +283,11 @@ def job(run: DAGRunResponse) -> Job:
         )
     except ValueError:
         options = None
+    user_uid = conf.get("user_uid")
     directory = reports.run_dir(deps.MARC_DAG, run.dag_run_id)
     return Job(
         job_id=run.dag_run_id,
+        user_uid=user_uid if isinstance(user_uid, str) else None,
         state=str(run.state.value),
         options=options,
         queued_at=run.queued_at,
@@ -288,6 +298,30 @@ def job(run: DAGRunResponse) -> Job:
             for name, filename in REPORT_FILES.items()
             if (directory / filename).is_file()
         ],
+    )
+
+
+@router.get("/jobs")
+def list_jobs(
+    dag_runs: deps.DagRuns,
+    settings: deps.Settings,
+    limit: int = Query(25, ge=1, le=MAX_JOBS_PAGE),
+    cursor: str = "",
+) -> JobList:
+    """The runs the Toolbox has started, newest first, a page at a time.
+
+    Read only: opening, cancelling and downloading still check ownership.
+    """
+    page = dag_runs.get_dag_runs(
+        deps.MARC_DAG,
+        run_id_prefix_pattern=JOB_ID_PREFIX,
+        order_by=["-run_after"],
+        limit=limit,
+        cursor=cursor,
+        _request_timeout=settings.request_timeout,
+    )
+    return JobList(
+        jobs=[job(run) for run in page.dag_runs], next_cursor=page.next_cursor or None
     )
 
 

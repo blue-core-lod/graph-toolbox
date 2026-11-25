@@ -82,6 +82,10 @@ def _binary_records(path: pathlib.Path) -> Iterator[bytes]:
 
 
 def _xml_records(path: pathlib.Path) -> Iterator[bytes]:
+    # lxml rather than pymarc's XML readers: parse_xml_to_array holds every
+    # record in memory, and map_xml pushes records to a callback, where this
+    # needs a generator that pulls one record at a time.
+    #
     # No entity resolution and no network, so a file can't make the parser
     # read anything but itself.
     events = ET.iterparse(

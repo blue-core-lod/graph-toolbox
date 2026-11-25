@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import os
 import pathlib
-import time
 from types import ModuleType
 
 import lxml.etree as ET
@@ -112,20 +110,6 @@ def test_uploads_over_the_limit_are_refused(
 
     assert response.status_code == 413
     assert _user_files(uploads_dir) == []
-
-
-def test_expired_uploads_go_when_the_user_next_uploads(
-    signed_in_client: TestClient, uploads_dir: pathlib.Path
-) -> None:
-    old = _upload(signed_in_client, mrc(1))["upload_id"]
-    recent = _upload(signed_in_client, mrc(1))["upload_id"]
-    directory = routes.user_dir(USER)
-    a_day_ago = time.time() - deps.UPLOAD_TTL.total_seconds() - 60
-    os.utime(directory / f"{old}.mrc", (a_day_ago, a_day_ago))
-
-    newest = _upload(signed_in_client, mrc(1))["upload_id"]
-
-    assert _user_files(uploads_dir) == sorted([f"{recent}.mrc", f"{newest}.mrc"])
 
 
 @pytest.mark.parametrize(
@@ -310,6 +294,7 @@ def _report(reports_dir: pathlib.Path, name: str, text: str = "status\n") -> Non
 @pytest.mark.parametrize(
     ("method", "path"),
     [
+        ("get", "/jobs"),
         ("get", f"/jobs/{RUN}"),
         ("post", f"/jobs/{RUN}/cancel"),
         ("get", f"/jobs/{RUN}/reports/import"),
@@ -317,6 +302,69 @@ def _report(reports_dir: pathlib.Path, name: str, text: str = "status\n") -> Non
 )
 def test_job_routes_require_sign_in(client: TestClient, method: str, path: str) -> None:
     assert client.request(method, f"{BASE}{path}").status_code == 401
+
+
+def test_jobs_list_every_users_toolbox_runs_newest_first(
+    signed_in_client: TestClient, reports_dir: pathlib.Path, dag_runs: FakeDagRuns
+) -> None:
+    dag_runs.add("toolbox__1", "success", user_uid=USER, **OPTIONS)
+    dag_runs.add("manual__2", "success", user_uid=USER, **OPTIONS)
+    dag_runs.add("toolbox__3", "running", user_uid="someone-else", **OPTIONS)
+
+    response = signed_in_client.get(f"{BASE}/jobs")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert [(j["job_id"], j["user_uid"]) for j in body["jobs"]] == [
+        ("toolbox__3", "someone-else"),
+        ("toolbox__1", USER),
+    ]
+    assert body["next_cursor"] is None
+    [(name, (dag_id,), kwargs)] = dag_runs.calls
+    assert (name, dag_id) == ("get_dag_runs", "marc_to_bibframe")
+    assert kwargs == {
+        "run_id_prefix_pattern": "toolbox__",
+        "order_by": ["-run_after"],
+        "limit": 25,
+        "cursor": "",
+        "_request_timeout": SETTINGS.request_timeout,
+    }
+
+
+def test_jobs_list_pages_with_a_cursor(
+    signed_in_client: TestClient, reports_dir: pathlib.Path, dag_runs: FakeDagRuns
+) -> None:
+    for n in range(3):
+        dag_runs.add(f"toolbox__{n}", user_uid=USER, **OPTIONS)
+
+    first = signed_in_client.get(f"{BASE}/jobs", params={"limit": 2}).json()
+    rest = signed_in_client.get(
+        f"{BASE}/jobs", params={"limit": 2, "cursor": first["next_cursor"]}
+    ).json()
+
+    assert [j["job_id"] for j in first["jobs"]] == ["toolbox__2", "toolbox__1"]
+    assert [j["job_id"] for j in rest["jobs"]] == ["toolbox__0"]
+    assert rest["next_cursor"] is None
+
+
+@pytest.mark.parametrize("limit", [0, 101, "many"])
+def test_jobs_list_limit_is_checked(
+    signed_in_client: TestClient, dag_runs: FakeDagRuns, limit: object
+) -> None:
+    response = signed_in_client.get(f"{BASE}/jobs", params={"limit": limit})
+
+    assert response.status_code == 422
+    assert dag_runs.calls == []
+
+
+def test_jobs_list_tolerates_runs_without_toolbox_conf(
+    signed_in_client: TestClient, reports_dir: pathlib.Path, dag_runs: FakeDagRuns
+) -> None:
+    dag_runs.add("toolbox__1", user_uid=7, marc_file="/x.mrc")
+
+    [listed] = signed_in_client.get(f"{BASE}/jobs").json()["jobs"]
+
+    assert (listed["user_uid"], listed["options"]) == (None, None)
 
 
 def test_job_shows_state_options_and_available_reports(
@@ -330,6 +378,7 @@ def test_job_shows_state_options_and_available_reports(
     assert response.status_code == 200
     assert response.json() == {
         "job_id": RUN,
+        "user_uid": USER,
         "state": "success",
         "options": OPTIONS,
         "queued_at": None,

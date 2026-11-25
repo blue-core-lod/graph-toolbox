@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Walk through a MARC to BIBFRAME job with the Toolbox API: upload, preview,
-# download, submit a dry run, check on it, and fetch its import report.
+# download, submit a dry run, check on it, fetch its import report, and list
+# recent jobs.
 #
 #   TOOLBOX_TOKEN=... ./examples/marc-bibframe.sh records.mrc
 #
@@ -62,6 +63,9 @@ if jq -e '.reports | index("import")' <<<"$status" >/dev/null; then
 else
   echo "no import report (the DAG may not write one yet)"
 fi
+
+echo "== Most recent jobs"
+api "$url/jobs?limit=5" | jq '.jobs[] | {job_id, user_uid, state}'
 
 # To stop a run that hasn't finished:
 #   api --request POST "$url/jobs/$job_id/cancel"

@@ -10,7 +10,6 @@ clients from the dependencies here, so tests replace them with
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import timedelta
 from typing import Annotated
 
 import jwt
@@ -40,13 +39,17 @@ JOB_DAGS = frozenset({BULK_UPDATE_DAG, MARC_DAG})
 ADMIN_ROLES = frozenset({"bluecore_admin"})
 
 # MARC uploads: binary MARC21 or MARC XML, up to 512 MiB (about 350,000
-# records), converted by the DAG in batches of at most 1,000 records. Uploads
-# not submitted within a day are removed when the same user next uploads.
+# records), converted by the DAG in batches of at most 1,000 records.
 MARC_SUFFIXES = frozenset({".mrc", ".xml"})
 MAX_UPLOAD_BYTES = 512 * 1024**2
 BATCH_SIZE = 1000
-UPLOAD_TTL = timedelta(hours=24)
 
+# Each dependency is a type alias, Annotated[<type>, Depends(<function>)].
+# Annotated attaches Depends to the type without changing it, so to type
+# checkers Settings is just BlueCoreSettings. FastAPI reads the Depends: for a
+# route parameter such as ``settings: deps.Settings``, it calls the function
+# on each request (resolving that function's own dependencies first) and
+# passes in what it returns.
 Settings = Annotated[BlueCoreSettings, Depends(get_settings)]
 
 
