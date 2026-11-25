@@ -32,6 +32,7 @@ bluecore_graph_toolbox = "bluecore_graph_toolbox.plugin:GraphToolboxPlugin"
 dev = [
     "apache-airflow==3.3.2",
     "httpx",
+    "lxml-stubs>=0.5.1",
     "pytest",
     "respx",
     "ruff",
